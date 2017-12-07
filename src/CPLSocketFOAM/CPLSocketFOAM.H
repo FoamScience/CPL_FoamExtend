@@ -49,93 +49,33 @@ Description
 #include "cpl/CPL_ndArray.h"
 #include "cpl/CPL_cartCreate.h"
 #include "meshSearch.H"
-
+#include "cpl/CPLSocket.h"
 // Nearest integer
-int nint(double d)
-{
+int nint(double d) {
     return std::floor(d+0.5);
 }
 
-class CPLSocketFOAM {   
+class CPLSocketFOAM: public CPLSocket {   
 
 public:
     
+
     // Construct from no arguments 
-    CPLSocketFOAM() : olapRegion(6), velBCRegion(6), cnstFRegion(6),
-                  velBCPortion(6), cnstFPortion(6), myCoords(3) {}
+    CPLSocketFOAM() : CPLSocket(CPL::cfd_realm) {}
+    void setTimingInfo();
+    void setCartCommInfo();
+    void setRealmDomainInfo();
+    void setOpenFOAM(const Foam::Time &runTime, const Foam::fvMesh &mesh);
+
+    const Foam::Time* foamRunTime;
+    const Foam::fvMesh* foamMesh; 
     
     // Invoke CPL_Library and store CFD realm communicator
     void initComms(int& argc, char**& argv);
-
-    // Analyse topology and perform CFD-side initialisation
-    void initCFD (const Foam::Time &runTime, const Foam::fvMesh &mesh);
-
-    void getCellTopology();
-    void allocateBuffers();
-
-    // Pack and unpack data into CPL-Library formats
-    void packStress(volVectorField &U, dimensionedScalar &nu, fvMesh &mesh);
-    double unpackVelocity(volVectorField &U, fvMesh &mesh);
-
-    // Send and receive the data with CPL-Library
-    void sendStress();
-    void recvVelocity();
-
-	~CPLSocketFOAM() {
-		delete meshSearcher;
-	}
-
-
-private:
-
-
-    // Number of processors in x, y and z directions, and periodicity
-    int npxyz[3]; 
-    int nprocs;
-    int periods[3];
-
-    // Domain dimensions
-    double xyzL[3];
-
-    // Number of cells globally in CFD domain 
-    int ncxyz[3];
-
-    // Size of the cells in each direction
-    double dx, dy, dz;
-
-    // Density of the fluid assumed by CPL
+    void init();
     double CPLDensity;
 
-    // Communicators for use with CPL_Library 
-    MPI_Comm realmComm; 
-    MPI_Comm cartComm; 
-
-    // Rank of this processor in cartComm 
-    int rankRealm;
-    int rankCart;
-
-    // Data to be sent/received with CPL-Library
-    CPL::ndArray<double> sendStressBuff;
-    CPL::ndArray<double> recvVelocityBuff;
-
-    // Region cell limits
-    std::vector<int> olapRegion;
-    std::vector<int> velBCRegion;
-    std::vector<int> cnstFRegion;
-
-    // Portions of the region in the local processor
-    std::vector<int> velBCPortion;
-    std::vector<int> cnstFPortion;
-
-    // Coordinates of the local processor
-    std::vector<int> myCoords;
-    
-    // Number of cells in the portion in a region
-    int velBCCells[3];
-    int cnstFCells[3];
-
-	//meshSearch local search for points in a mesh
-	Foam::meshSearch* meshSearcher;
+	virtual ~CPLSocketFOAM() { }
 
 };
 

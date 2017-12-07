@@ -13,7 +13,7 @@
 #
 
 # Environment variable for install directory
-export FOAM_CPL_VERSION=3.0.1
+export FOAM_CPL_VERSION=3.0.x
 export CWD=`pwd`
 export FOAM_INST_DIR=$(cat CODE_INST_DIR)
 # Source the other environment variables

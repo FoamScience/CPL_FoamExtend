@@ -32,6 +32,8 @@ Description
 #include "fvCFD.H"
 #include "pisoControl.H"
 #include "CPLSocketFOAM.H"
+#include "IcoFOAMOutgoingField.H"
+#include "IcoFOAMIncomingField.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -48,24 +50,40 @@ int main(int argc, char *argv[])
 
     #include "createFields.H"
     #include "initContinuityErrs.H"
-    socket.initCFD(runTime, mesh);
+    socket.setOpenFOAM(runTime, mesh);
+    socket.init();
+    CPL::OutgoingFieldPool cnstPool(socket.cnstPortionRegion, socket.cnstRegion);
+    CPL::IncomingFieldPool bcPool(socket.bcPortionRegion, socket.bcRegion); 
+    // Define constrains and BCs
+    (new StressOutgoingField("stresscnst", socket.cnstPortionRegion, socket.cnstRegion,U, nu, mesh, 1.0))->addToPool(cnstPool);
+    (new VelIncomingField("velocitybc", socket.bcPortionRegion, socket.bcRegion, U, nu, mesh, 1.0))->addToPool(bcPool);
+
+    // Setup of the Fields
+    cnstPool.setupAll();
+    bcPool.setupAll();
+    // Allocation of internal send/receive buffers
+    socket.allocateBuffers(cnstPool, bcPool);
 
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 	
 	// Initial communication to initialize domains
-	socket.packStress(U, nu, mesh);
-	socket.sendStress();
-	socket.recvVelocity();
-	socket.unpackVelocity(U, mesh);
+    // cnstPool.packAll();
+    // socket.send();
+    // socket.receive();
+    // bcPool.unpackAll();
+    socket.communicate(cnstPool, bcPool);
 
     Info<< "\nStarting time loop\n" << endl;
     while (runTime.loop())
     {
-		socket.packStress(U, nu, mesh);
-		socket.sendStress();
-		socket.recvVelocity();
-       	socket.unpackVelocity(U, mesh);
-
+        socket.communicate(cnstPool, bcPool);
+        // cnstPool.updateAll();
+        // cnstPool.packAll();
+        // socket.send();
+        // socket.receive();
+        // bcPool.updateAll();
+        // bcPool.unpackAll();
+        //
         Info<< "Time = " << runTime.timeName() << nl << endl;
 
         #include "CourantNo.H"
