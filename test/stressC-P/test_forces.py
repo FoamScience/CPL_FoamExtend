@@ -103,6 +103,9 @@ def test_forcesC2P(prepare_config_fix, cfdprocs, mdprocs, cells,  err_msg):
                      "cnst_xlo": 1, "cnst_xhi": cells[0],
                      "cnst_ylo": 3, "cnst_yhi": 5,
                      "cnst_zlo": 1, "cnst_zhi": cells[2],
+                     "bndry_xlo": 1, "bndry_xhi": cells[0],
+                     "bndry_ylo": 1, "bndry_yhi": 1,
+                     "bndry_zlo": 1, "bndry_zhi": cells[2],
                      "tstep_ratio": 1, }
 
     # Parametrize OpenFOAM files
