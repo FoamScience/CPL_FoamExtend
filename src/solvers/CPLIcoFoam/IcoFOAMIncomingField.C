@@ -1,5 +1,4 @@
 #include "IcoFOAMIncomingField.H"
-#include "cpl/cpl.h"
 
 void VelIncomingField::unpack_(const std::vector<int>& glob_cell,
                                const std::vector<int>& loc_cell,
@@ -18,9 +17,9 @@ void VelIncomingField::unpack_(const std::vector<int>& glob_cell,
             double bcvx = buffer(0, loc_cell[0], loc_cell[1], loc_cell[2])/m;
             double bcvy = buffer(1, loc_cell[0], loc_cell[1], loc_cell[2]) /m;
             double bcvz = buffer(2, loc_cell[0], loc_cell[1], loc_cell[2])/m;
-            if (applyBCx) (*bcPatch)[faceI].x() = bcvx;
-            if (applyBCy) (*bcPatch)[faceI].y() = bcvy;
-            if (applyBCz) (*bcPatch)[faceI].z() = bcvz;
+            if (applyBc[0]) (*bcPatch)[faceI].x() = bcvx;
+            if (applyBc[1]) (*bcPatch)[faceI].y() = bcvy;
+            if (applyBc[2]) (*bcPatch)[faceI].z() = bcvz;
         }
 
     }
@@ -28,16 +27,15 @@ void VelIncomingField::unpack_(const std::vector<int>& glob_cell,
 void VelIncomingField::setup() {
         data_size = 4;
         // Apply BCs only in certain directions.
-        applyBCx = CPL::get<int> ("cpl_cfd_bc_x");
-        applyBCy = CPL::get<int> ("cpl_cfd_bc_y");
-        applyBCz = CPL::get<int> ("cpl_cfd_bc_z");
+        applyBc = std::vector<int>(3);
+        CPL::get_file_param("bc.velocity", "components", applyBc);
 
         // Patch receiving B.Cs
         Foam::string bcPatchName ("CPLReceiveMD");
         Foam::label bcPatchID = foamMesh->boundary().findPatchID(bcPatchName);
 
         if (bcPatchID == -1) {
-            FatalErrorIn ( "CPLSocketFOAM::unpack()")
+            FatalErrorIn ("CPLSocketFOAM::unpack()")
                 << " Could not find patch ID " << bcPatchName << ". "
                    " Aborting."
                 << exit(FatalError);

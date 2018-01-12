@@ -2,6 +2,7 @@
 #define ICOFOAM_OUTGOING_FIELD_H
 
 #include "cpl/TransmittingField.h"
+#include "cpl/cpl.h"
 #include "fvCFD.H"
 #include "meshSearch.H"
 #include <valarray>
@@ -39,7 +40,7 @@ class StressOutgoingField:  public IcoFOAMOutgoingField {
         void setup();
         void update();
         Foam::symmTensorField stressField;
-        int mode;
+        std::string compute_mode;
         virtual ~StressOutgoingField() {}
 };
 

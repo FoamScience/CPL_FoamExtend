@@ -51,39 +51,38 @@ int main(int argc, char *argv[])
     #include "createFields.H"
     #include "initContinuityErrs.H"
     socket.setOpenFOAM(runTime, mesh);
+    socket.loadParamFile();
+    CPL::get_file_param("constrain-enabled", "", socket.sendEnabled);
+    CPL::get_file_param("bc-enabled", "", socket.recvEnabled);
+
+
     socket.init();
     CPL::OutgoingFieldPool cnstPool(socket.cnstPortionRegion, socket.cnstRegion);
     CPL::IncomingFieldPool bcPool(socket.bcPortionRegion, socket.bcRegion); 
-    // Define constrains and BCs
-    (new StressOutgoingField("stresscnst", socket.cnstPortionRegion, socket.cnstRegion,U, nu, mesh, 1.0))->addToPool(cnstPool);
-    (new VelIncomingField("velocitybc", socket.bcPortionRegion, socket.bcRegion, U, nu, mesh, 1.0))->addToPool(bcPool);
 
-    // Setup of the Fields
-    cnstPool.setupAll();
-    bcPool.setupAll();
-    // Allocation of internal send/receive buffers
-    socket.allocateBuffers(cnstPool, bcPool);
+    if (socket.sendEnabled) {
+        (new StressOutgoingField("stresscnst", socket.cnstPortionRegion, socket.cnstRegion,U, nu, mesh, 1.0))->addToPool(&cnstPool);
+        cnstPool.setupAll();
+        if (!socket.sendBuffAllocated)
+            socket.allocateSendBuffer(cnstPool);
+    }
+    if (socket.recvEnabled) {
+        (new VelIncomingField("velocitybc", socket.bcPortionRegion, socket.bcRegion, U, nu, mesh, 1.0))->addToPool(&bcPool);
+        bcPool.setupAll();
+        if (!socket.recvBuffAllocated)
+            socket.allocateRecvBuffer(bcPool);
+    }
 
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 	
 	// Initial communication to initialize domains
-    // cnstPool.packAll();
-    // socket.send();
-    // socket.receive();
-    // bcPool.unpackAll();
     socket.communicate(cnstPool, bcPool);
 
     Info<< "\nStarting time loop\n" << endl;
     while (runTime.loop())
     {
         socket.communicate(cnstPool, bcPool);
-        // cnstPool.updateAll();
-        // cnstPool.packAll();
-        // socket.send();
-        // socket.receive();
-        // bcPool.updateAll();
-        // bcPool.unpackAll();
-        //
+
         Info<< "Time = " << runTime.timeName() << nl << endl;
 
         #include "CourantNo.H"

@@ -33,6 +33,7 @@ except:
     print("ERROR: ", sys.exc_info()[0], file=sys.stderr)
     MPI.COMM_WORLD.Abort(errorcode=1)
 
+nsteps = 1
 dt = 0.01
 xyz_orig = np.array([0.0, 0.0, 0.0], order='F', dtype=np.float64)
 NProcs = NPx*NPy*NPz
@@ -61,8 +62,7 @@ cnstFPortion = cpllib.my_proc_portion(cnstFRegion)
 [cnstncx, cnstncy, cnstncz] = cpllib.get_no_cells(cnstFPortion)
 
 # Velocity averaging region cell limits and number of cells
-velBCRegion = np.copy(olap_limits)
-velBCRegion[3] = velBCRegion[2]
+velBCRegion = cpllib.get_bnry_limits()
 velBCPortion = cpllib.my_proc_portion(velBCRegion)
 [velBCncx, velBCncy, velBCncz] = cpllib.get_no_cells(velBCPortion)
 

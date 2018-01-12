@@ -5,19 +5,18 @@ void StressOutgoingField::pack_(const std::vector<int>& glob_cell,
                                 const std::vector<int>& loc_cell,
                                 const std::valarray<double>& coord) {
 
+    //TODO: Check for mode=0 to work letting one more cell in overalp region
     Foam::label cell;
-    double ycenter_dy;
-	if (mode == 0)
+    // Default compute_mode=="cell"
+    double ycenter_dy = 0.5;
+	if (compute_mode == "plane")
 		ycenter_dy = 1.0;
-	else
-		ycenter_dy = 0.5;
     Foam::point globalPos = Foam::point((glob_cell[0] + 0.5) * dx,
 									    (glob_cell[1] + ycenter_dy) * dy, 
 									    (glob_cell[2] + 0.5) * dz);
 
 	cell = meshSearcher->findNearestCell(globalPos);
     if (cell != -1) {
-        //TODO: Turn buff into a function that get only 2 params, (buf_pos, value)
         buffer(0,loc_cell[0],loc_cell[1],loc_cell[2]) = stressField[cell].xx();
         buffer(1,loc_cell[0],loc_cell[1],loc_cell[2]) = stressField[cell].xy();
         buffer(2,loc_cell[0],loc_cell[1],loc_cell[2]) = stressField[cell].xz();
@@ -37,7 +36,9 @@ void StressOutgoingField::pack_(const std::vector<int>& glob_cell,
 }
 
 void StressOutgoingField::setup() {
-    mode = 1;
+    CPL::get_file_param("constrain.momentum", "compute-mode", compute_mode);
+    if (compute_mode != "plane" && compute_mode != "cell")
+        std::cout<< "Error mode compute stress." << "mode " << compute_mode <<std::endl;
     meshSearcher = new Foam::meshSearch(*foamMesh);
     data_size = 9;
     update();
@@ -47,10 +48,9 @@ void StressOutgoingField::update() {
     Foam::dimensionedScalar mu(foamDensity*kViscosity);
     //TODO: Should be mu not nu : Tests with density equals 1.0
 	Foam::volSymmTensorField sigma_vol(kViscosity*2*dev(symm(fvc::grad(*velocityField))));
-    double ycenter_dy = 0.0;
-	if (mode == 0)
+	if (compute_mode == "plane")
 		stressField = (Foam::symmTensorField) fvc::interpolate(sigma_vol);
-	else 
+    else if (compute_mode == "cell")
 		stressField = (Foam::symmTensorField) sigma_vol;
 }
  

@@ -1,0 +1,40 @@
+{
+"constrain-enabled": true,
+"bc-enabled": true,
+"constrain" : {
+    "momentum": {
+        "type": "Flekkoy",
+        "unit-conversion": "disabled",
+        "compute-mode": "cell"
+    },
+    "mass": {
+        "type": ""
+    },
+    "energy": { 
+        "type": ""
+    }
+},
+
+"bc": {
+    "velocity": {
+        "compute-mode": "above",
+        "components": [1, 1, 1]
+    }
+},
+
+"initial-conditions" : {
+    "temperature" : 300.0,
+    "pressure": 0.0,
+    "density": 83.2
+},
+
+"cfd" : {
+    "name": "Python script",
+    "bin": "dummyCFD.py"
+},
+
+"md" : {
+    "name": "lammps-stable",
+    "bin" : "lmp_cpl"
+}
+}

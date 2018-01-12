@@ -62,13 +62,13 @@ cnstFPortion = cpllib.my_proc_portion(cnstFRegion)
 [cnstncx, cnstncy, cnstncz] = cpllib.get_no_cells(cnstFPortion)
 
 # Velocity averaging region cell limits and number of cells
-velBCRegion = np.copy(olap_limits)
-velBCRegion[3] = velBCRegion[2]
+velBCRegion = cpllib.get_bnry_limits()
 velBCPortion = cpllib.my_proc_portion(velBCRegion)
 [velBCncx, velBCncy, velBCncz] = cpllib.get_no_cells(velBCPortion)
 
 recv_array = np.zeros((9, cnstncx, cnstncy, cnstncz), order='F', dtype=np.float64)
 
+# TODO: Change to sine/cosine
 np.random.seed(1000)
 if my_coords[0] % 2 == 0:
     send_array = 5*np.array(np.random.rand(4, velBCncx, velBCncy, velBCncz), order='F', dtype=np.float64)

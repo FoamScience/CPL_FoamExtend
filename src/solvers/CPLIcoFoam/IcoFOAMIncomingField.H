@@ -4,6 +4,7 @@
 #include "cpl/TransmittingField.h"
 #include "fvCFD.H"
 #include "meshSearch.H"
+#include "cpl/cpl.h"
 #include <valarray>
 
 class IcoFOAMIncomingField : public CPL::IncomingField {
@@ -38,8 +39,7 @@ class VelIncomingField:  public IcoFOAMIncomingField {
                      const std::valarray<double>& coord);
         void setup();
         void update();
-        int mode;
-        int applyBCx, applyBCy, applyBCz;
+        std::vector<int> applyBc;
         Foam::vectorField bcFaceCenters;
         Foam::fvPatchVectorField* bcPatch;
         virtual ~VelIncomingField() {}

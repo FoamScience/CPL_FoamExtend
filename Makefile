@@ -4,17 +4,17 @@ OpenFOAM_ETC_DIR=$(OpenFOAM_ETC_DIR)/etc
 
 .PHONY: all test clean clean-test
 all:
-	@wmake libso src/CPLPstream
-	@wmake libso src/CPLSocketFOAM
-	@wmake src/solvers/CPLIcoFoam
+	wmake libso src/CPLPstream
+	wmake libso src/CPLSocketFOAM
+	wmake src/solvers/CPLIcoFoam
 	
 patch-openfoam:
 	cp ./config/pref.sh $(OpenFOAM_ETC_DIR)/config/
 
 clean:
-	@wclean src/CPLSocketFOAM
-	@wclean src/solvers/CPLIcoFoam
-	@wclean src/CPLPstream
+	wclean src/CPLSocketFOAM
+	wclean src/solvers/CPLIcoFoam
+	wclean src/CPLPstream
 	rm -rf bin
 	rm -rf lib
 
@@ -23,4 +23,4 @@ clean-test:
 	cd test/velocityP-C/debug && ./clean.sh
 
 test:
-	@py.test2 -v ./test
+	py.test2 -v ./test
