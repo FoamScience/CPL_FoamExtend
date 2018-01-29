@@ -107,7 +107,6 @@ void CPLSocketFOAM::setOpenFOAM(const Foam::Time &run_time, const Foam::fvMesh &
 
 void CPLSocketFOAM::init() {
     CPLSocket::init();
-    CPLDensity = CPL::density_cfd();
 }
 
 // double CPLSocketFOAM::\

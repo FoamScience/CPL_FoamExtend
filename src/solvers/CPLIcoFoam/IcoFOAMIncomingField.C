@@ -1,5 +1,27 @@
 #include "IcoFOAMIncomingField.H"
 
+//TODO: Create a function to average DataFields
+/**
+if (CPL::get<int>("cpl_cfd_bc_slice")) {
+
+    Foam::Info << "CPL_CFD_BC_SLICE is on: averaging CFD recvVelocity "
+                  "in the x-z plane" << Foam::endl;
+    // Number of cells in the local processor in x-z plane
+    int N = recvVelocityBuff.shape(1) * recvVelocityBuff.shape(3);
+
+    // For every component and y-value 
+    for (int j = 0; j < recvVelocityBuff.shape(2); ++j) {
+        for (int c = 0; c < recvVelocityBuff.shape(0); ++c) {
+        // Sum across the x-z plane 
+        double total = 0.0;
+        for (int k = 0; k < recvVelocityBuff.shape(3); ++k)
+            for (int i = 0; i < recvVelocityBuff.shape(1); ++i)
+                total += recvVelocityBuff(c, i, j, k);
+        }
+    }
+}
+**/
+
 void VelIncomingField::unpack_(const std::vector<int>& glob_cell,
                                const std::vector<int>& loc_cell,
                                const std::valarray<double>& coord) {

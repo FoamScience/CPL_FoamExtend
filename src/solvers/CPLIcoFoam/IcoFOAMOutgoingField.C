@@ -46,8 +46,8 @@ void StressOutgoingField::setup() {
 
 void StressOutgoingField::update() {
     Foam::dimensionedScalar mu(foamDensity*kViscosity);
-    //TODO: Should be mu not nu : Tests with density equals 1.0
-	Foam::volSymmTensorField sigma_vol(kViscosity*2*dev(symm(fvc::grad(*velocityField))));
+    //NOTE: Tests should have density =  1
+	Foam::volSymmTensorField sigma_vol(mu*2*dev(symm(fvc::grad(*velocityField))));
 	if (compute_mode == "plane")
 		stressField = (Foam::symmTensorField) fvc::interpolate(sigma_vol);
     else if (compute_mode == "cell")

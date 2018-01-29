@@ -56,15 +56,21 @@ def compare_forces(tol, md_fname="md_forces.dat",
         cfd_lines = cfd_file.readlines()
     md_lines = [l[:-1].split(" ") for l in cfd_lines]
     md_cells = {}
+
+    # Get density
+    import json
+    density = json.load(open("config.cpl",'r'))["initial-conditions"]["density"]
     for l in md_lines:
         k = "{0:.5f}".format(float(l[0])), "{0:.5f}".format(float(l[1])), "{0:.5f}".format(float(l[2]))
         md_cells[k] = np.array([float(l[3]), float(l[4]), float(l[5])])
     for k in md_cells.keys():
         try:
             #print k, "--", md_cells[k], " ", openfoam_cells[k]
+            print "den:", density
+            openfoam_cells[k] *= density
             diff_forces = abs(md_cells[k] - openfoam_cells[k])
             if (np.any(diff_forces > tol)):
-                print "Cell %s value differs in md : %s and cfd: %s" % (str(k), str(md_cells[k]), str(openfoam_cells[k]))
+                print "Cell %s value differs in md : %s and cfd: %s" % (str(k), str(83.2*md_cells[k]), str(openfoam_cells[k]))
                 assert False
                 sys.exit()
         except KeyError:

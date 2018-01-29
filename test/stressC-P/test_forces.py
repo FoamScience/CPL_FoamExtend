@@ -54,8 +54,9 @@ def compare_forces(tol, cfd_params, md_fname="md_forces.dat",
             "{0:.5f}".format(cell_coord[2])
         openfoam_cells[k] = np.array([float(s_xy[cell_no]), float(s_yy[cell_no]), 
                                       float(s_yz[cell_no])])
-
-
+    # Get density
+    import json
+    density = json.load(open("config.cpl",'r'))["initial-conditions"]["density"]
     # Line format of dummy md forces file -- > x y z sxy syy szy
     with open(md_fname, "r") as cfd_file:
         cfd_lines = cfd_file.readlines()
@@ -67,7 +68,7 @@ def compare_forces(tol, cfd_params, md_fname="md_forces.dat",
 
     for k in md_cells.keys():
         try:
-            diff_forces = abs(md_cells[k] - openfoam_cells[k])
+            diff_forces = abs(md_cells[k] - density*openfoam_cells[k])
             if (np.any(diff_forces > tol)):
                 print "Cell %s value differs in md : %s and cfd: %s" % (str(k), str(md_cells[k]), str(openfoam_cells[k]))
                 assert False

@@ -73,7 +73,6 @@ public:
     // Invoke CPL_Library and store CFD realm communicator
     void initComms(int& argc, char**& argv);
     void init();
-    double CPLDensity;
 
 	virtual ~CPLSocketFOAM() { }
 

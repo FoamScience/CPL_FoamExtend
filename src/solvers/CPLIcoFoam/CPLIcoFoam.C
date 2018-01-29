@@ -60,14 +60,18 @@ int main(int argc, char *argv[])
     CPL::OutgoingFieldPool cnstPool(socket.cnstPortionRegion, socket.cnstRegion);
     CPL::IncomingFieldPool bcPool(socket.bcPortionRegion, socket.bcRegion); 
 
+    // Get density
+    double density;
+    CPL::get_file_param("initial-conditions", "density", density);
+
     if (socket.sendEnabled) {
-        (new StressOutgoingField("stresscnst", socket.cnstPortionRegion, socket.cnstRegion,U, nu, mesh, 1.0))->addToPool(&cnstPool);
+        (new StressOutgoingField("stresscnst", socket.cnstPortionRegion, socket.cnstRegion,U, nu, mesh, density))->addToPool(&cnstPool);
         cnstPool.setupAll();
         if (!socket.sendBuffAllocated)
             socket.allocateSendBuffer(cnstPool);
     }
     if (socket.recvEnabled) {
-        (new VelIncomingField("velocitybc", socket.bcPortionRegion, socket.bcRegion, U, nu, mesh, 1.0))->addToPool(&bcPool);
+        (new VelIncomingField("velocitybc", socket.bcPortionRegion, socket.bcRegion, U, nu, mesh, density))->addToPool(&bcPool);
         bcPool.setupAll();
         if (!socket.recvBuffAllocated)
             socket.allocateRecvBuffer(bcPool);
