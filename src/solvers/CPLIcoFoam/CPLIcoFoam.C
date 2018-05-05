@@ -41,6 +41,11 @@ int main(int argc, char *argv[])
 {
     CPLSocketFOAM socket;
     socket.initComms(argc, argv);
+    socket.loadParamFile();
+    CPL::get_file_param("constrain-enabled", "", socket.sendEnabled);
+    CPL::get_file_param("bc-enabled", "", socket.recvEnabled);
+    double density;
+    CPL::get_file_param("initial-conditions", "density", density);
 
     #include "setRootCase.H"
     #include "createTime.H"
@@ -49,23 +54,31 @@ int main(int argc, char *argv[])
     pisoControl piso(mesh);
 
     #include "createFields.H"
+
+    //Create stress field
+    dimensionedScalar mu(density*nu);
+    volSymmTensorField sigma
+            (
+                IOobject
+                (
+                    "sigma",
+                    runTime.timeName(),
+                    mesh,
+                    IOobject::NO_READ,
+                    IOobject::AUTO_WRITE
+                ),
+                mu*2*dev(symm(fvc::grad(U)))
+            );
+
     #include "initContinuityErrs.H"
     socket.setOpenFOAM(runTime, mesh);
-    socket.loadParamFile();
-    CPL::get_file_param("constrain-enabled", "", socket.sendEnabled);
-    CPL::get_file_param("bc-enabled", "", socket.recvEnabled);
-
-
     socket.init();
     CPL::OutgoingFieldPool cnstPool(socket.cnstPortionRegion, socket.cnstRegion);
     CPL::IncomingFieldPool bcPool(socket.bcPortionRegion, socket.bcRegion); 
 
-    // Get density
-    double density;
-    CPL::get_file_param("initial-conditions", "density", density);
-
+    
     if (socket.sendEnabled) {
-        (new StressOutgoingField("stresscnst", socket.cnstPortionRegion, socket.cnstRegion,U, nu, mesh, density))->addToPool(&cnstPool);
+        (new StressOutgoingField("stresscnst", socket.cnstPortionRegion, socket.cnstRegion, sigma, mesh))->addToPool(&cnstPool);
         cnstPool.setupAll();
         if (!socket.sendBuffAllocated)
             socket.allocateSendBuffer(cnstPool);
@@ -77,7 +90,7 @@ int main(int argc, char *argv[])
             socket.allocateRecvBuffer(bcPool);
     }
 
-    // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 	
 	// Initial communication to initialize domains
     socket.communicate(cnstPool, bcPool);
@@ -85,7 +98,6 @@ int main(int argc, char *argv[])
     Info<< "\nStarting time loop\n" << endl;
     while (runTime.loop())
     {
-        socket.communicate(cnstPool, bcPool);
 
         Info<< "Time = " << runTime.timeName() << nl << endl;
 
@@ -146,7 +158,15 @@ int main(int argc, char *argv[])
             U = HbyA - rAU*fvc::grad(p);
             U.correctBoundaryConditions();
         }
-
+        
+        // Update sigma value after solving for U
+        //NOTE: The first row of cells in the y direction will not contain
+        //the correct stress but it does not matter as that is the BC region.
+        // On the other hand if this is used for plotting stress instead of fields
+        // generated from stressComponents utility, be careful!
+        sigma = mu*2*dev(symm(fvc::grad(U)));
+        // Pack/unpack and communicate after computing fields but before writing to file.
+        socket.communicate(cnstPool, bcPool);
         runTime.write();
 
         Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"

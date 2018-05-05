@@ -66,7 +66,6 @@ def compare_forces(tol, md_fname="md_forces.dat",
     for k in md_cells.keys():
         try:
             #print k, "--", md_cells[k], " ", openfoam_cells[k]
-            print "den:", density
             openfoam_cells[k] *= density
             diff_forces = abs(md_cells[k] - openfoam_cells[k])
             if (np.any(diff_forces > tol)):

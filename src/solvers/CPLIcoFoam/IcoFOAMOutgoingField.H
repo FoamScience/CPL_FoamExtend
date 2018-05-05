@@ -11,21 +11,16 @@ class IcoFOAMOutgoingField : public CPL::OutgoingField {
     public:
         IcoFOAMOutgoingField() : OutgoingField() {}
         IcoFOAMOutgoingField(std::string name, const PortionField& portion_field,
-                             const PortionField& field,
-                             volVectorField& velocity,
-                             dimensionedScalar k_viscosity, 
-                             fvMesh& mesh, double density): 
+                             const PortionField& field, const volSymmTensorField& sigma,
+                             const fvMesh& mesh): 
                              CPL::OutgoingField(name, portion_field, field),
-                             velocityField(&velocity), kViscosity(k_viscosity),
-                             foamMesh(&mesh), foamDensity(density) {}
+                             sigma(&sigma), foamMesh(&mesh) {}
         
-        volVectorField* velocityField;
-        dimensionedScalar kViscosity;
-        fvMesh* foamMesh; 
+        const fvMesh* foamMesh; 
         Foam::meshSearch* meshSearcher;
-        double foamDensity;
-
+        const Foam::volSymmTensorField* sigma;
         virtual ~IcoFOAMOutgoingField(){delete meshSearcher;}
+        // virtual ~IcoFOAMOutgoingField(){}
 
 
 };
