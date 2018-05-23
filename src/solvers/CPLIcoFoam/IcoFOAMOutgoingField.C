@@ -24,6 +24,7 @@ void StressOutgoingField::pack_(const std::vector<int>& glob_cell,
     
     // std::stringstream ss;
     if (cell != -1) {
+        // Do interpolation 
         if (compute_mode == "plane") {
             const Foam::cell& faces = foamMesh->cells()[cell];
             forAll( faces, i )  {

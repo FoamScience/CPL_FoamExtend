@@ -82,10 +82,9 @@ cpllib.recv(recv_array, cnstFRegion)
 cpllib.send(send_array, velBCRegion)
 
 nsteps = cpllib.get("nsteps_coupled")
-for i in xrange(nsteps):
+for step in xrange(1, nsteps+1):
     cpllib.recv(recv_array, cnstFRegion)
     cpllib.send(send_array, velBCRegion)
-
-cpllib.dump_region(velBCRegion, send_array, "md_vels.dat", realm_comm, 
-        components={0:None, 1:None, 2:None}, coords="other")
+    cpllib.dump_region(velBCRegion, send_array, "md_vels%d.dat" % step, realm_comm, 
+            components={0:None, 1:None, 2:None}, coords="other")
 cpllib.finalize()

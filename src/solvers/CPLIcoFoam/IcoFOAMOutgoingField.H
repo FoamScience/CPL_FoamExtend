@@ -25,7 +25,6 @@ class IcoFOAMOutgoingField : public CPL::OutgoingField {
 
 };
 
-//TODO: Maybe use dependencies to compute stress once
 class StressOutgoingField:  public IcoFOAMOutgoingField {
     public:
         using IcoFOAMOutgoingField::IcoFOAMOutgoingField;
