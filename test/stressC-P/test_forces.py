@@ -6,6 +6,7 @@ import os
 import sys
 import subprocess
 import re
+import json
 
 try:
     from PyFoam.RunDictionary.ParsedParameterFile import ParsedParameterFile
@@ -43,6 +44,8 @@ def compare_forces(tol, md_fname="md_forces.dat",
     #NOTE: dt hast to be an integer for this to work
     for step in xrange(1, steps+1):
         openfoam_dir = os.path.join(openfoam_casedir, str(step*dt))
+        # Get viscosity conversion
+        viscosity_conversion = json.load(open("config.cpl",'r'))["conversion-factors"]["dyn-viscosity"]
         # OpenFOAM data   
         s_xy = ParsedParameterFile(openfoam_dir + "/sigmaxy")["internalField"]
         # WARNING: This wont work if the value is uniform
@@ -73,14 +76,14 @@ def compare_forces(tol, md_fname="md_forces.dat",
         md_cells = {}
 
         # Get density
-        import json
         density = json.load(open("config.cpl",'r'))["initial-conditions"]["density"]
+        density_conversion = json.load(open("config.cpl",'r'))["conversion-factors"]["density"]
         for l in md_lines:
             k = "{0:.5f}".format(float(l[0])), "{0:.5f}".format(float(l[1])), "{0:.5f}".format(float(l[2]))
             md_cells[k] = np.array([float(l[3]), float(l[4]), float(l[5])])
         for k in md_cells.keys():
             try:
-                openfoam_cells[k] *= density
+                openfoam_cells[k] *= density * density_conversion * viscosity_conversion
                 diff_forces = abs(md_cells[k] - openfoam_cells[k])
                 if (np.any(diff_forces > tol)):
                     print "Cell %s value differs in md : %s and cfd: %s" % (str(k), str(density*md_cells[k]), str(openfoam_cells[k]))

@@ -7,12 +7,15 @@ all:
 	wmake libso src/CPLPstream
 	wmake libso src/CPLSocketFOAM
 	wmake src/solvers/CPLIcoFoam
+	wmake src/solvers/CPLNonNewtonianIcoFoam
 	
 patch-openfoam:
 	cp ./config/pref.sh $(OpenFOAM_ETC_DIR)/config/
 
 clean:
 	wclean src/CPLSocketFOAM
+	wclean src/solvers/CPLNonNewtonianIcoFoam
+	wclean src/solvers/CPLThermalIcoFoam
 	wclean src/solvers/CPLIcoFoam
 	wclean src/CPLPstream
 	rm -rf bin

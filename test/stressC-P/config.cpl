@@ -28,6 +28,11 @@
     "density": 83.2
 },
 
+"conversion-factors" : {
+    "density": 6.022140857e-4,
+    "dyn-viscosity": 0.06
+},
+
 "cfd" : {
     "name": "Python script",
     "bin": "dummyCFD.py"

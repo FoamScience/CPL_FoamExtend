@@ -6,7 +6,6 @@ EXE_INC = \
     -I$(CONDA_PREFIX)/include/cpl \
     $(MPI_ARCH_INC) \
     -I$(FOAM_CPL_APP_SRC)/CPLSocketFOAM/lnInclude \
-    -I$(FOAM_CPL_APP_SRC)/solvers/CPLFields \
     -I$(CPL_INCLUDE_PATH)
 
 EXE_LIBS = \

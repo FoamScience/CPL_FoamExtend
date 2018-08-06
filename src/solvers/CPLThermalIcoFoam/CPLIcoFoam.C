@@ -32,8 +32,8 @@ Description
 #include "fvCFD.H"
 #include "pisoControl.H"
 #include "CPLSocketFOAM.H"
-#include "StressOutgoingField.H"
-#include "VelocityIncomingField.H"
+#include "IcoFOAMOutgoingField.H"
+#include "IcoFOAMIncomingField.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -44,7 +44,6 @@ int main(int argc, char *argv[])
     socket.loadParamFile();
     CPL::get_file_param("constrain-enabled", "", socket.sendEnabled);
     CPL::get_file_param("bc-enabled", "", socket.recvEnabled);
-    // Currently density is not used here
     double density;
     CPL::get_file_param("initial-conditions", "density", density);
 
@@ -56,14 +55,8 @@ int main(int argc, char *argv[])
 
     #include "createFields.H"
 
-    // Conversion factors (Units come in S.I)
-    double den_Si2den_Md, eta_Si2eta_Md;
-    CPL::get_file_param("conversion-factors", "density", den_Si2den_Md);
-    CPL::get_file_param("conversion-factors", "dyn-viscosity", eta_Si2eta_Md);
-    density *= den_Si2den_Md;
-    dimensionedScalar eta(density*nu*eta_Si2eta_Md);
-
     //Create stress field
+    dimensionedScalar mu(density*nu);
     volSymmTensorField sigma
             (
                 IOobject
@@ -74,7 +67,7 @@ int main(int argc, char *argv[])
                     IOobject::NO_READ,
                     IOobject::AUTO_WRITE
                 ),
-                eta*2*dev(symm(fvc::grad(U)))
+                mu*2*dev(symm(fvc::grad(U)))
             );
 
     #include "initContinuityErrs.H"
@@ -91,7 +84,7 @@ int main(int argc, char *argv[])
             socket.allocateSendBuffer(cnstPool);
     }
     if (socket.recvEnabled) {
-        (new VelIncomingField("velocitybc", socket.bcPortionRegion, socket.bcRegion, U, mesh, density))->addToPool(&bcPool);
+        (new VelIncomingField("velocitybc", socket.bcPortionRegion, socket.bcRegion, U, nu, mesh, density))->addToPool(&bcPool);
         bcPool.setupAll();
         if (!socket.recvBuffAllocated)
             socket.allocateRecvBuffer(bcPool);
@@ -171,7 +164,7 @@ int main(int argc, char *argv[])
         //the correct stress but it does not matter as that is the BC region.
         // On the other hand if this is used for plotting stress instead of fields
         // generated from stressComponents utility, be careful!
-        sigma = eta*2*dev(symm(fvc::grad(U)));
+        sigma = mu*2*dev(symm(fvc::grad(U)));
         // Pack/unpack and communicate after computing fields but before writing to file.
         socket.communicate(cnstPool, bcPool);
         runTime.write();

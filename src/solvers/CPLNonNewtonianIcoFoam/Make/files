@@ -1,0 +1,5 @@
+CPLNonNewtonianIcoFoam.C
+StressOutgoingField.C
+VelocityIncomingField.C
+
+EXE = $(FOAM_CPL_APP_BIN)/CPLNonNewtonianIcoFoam
