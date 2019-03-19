@@ -39,6 +39,8 @@ Description
 
 int main(int argc, char *argv[])
 {
+    // Check args first
+
     CPLSocketFOAM socket;
     socket.initComms(argc, argv);
     socket.loadParamFile();
