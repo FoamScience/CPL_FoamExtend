@@ -30,15 +30,15 @@ void VelIncomingField::unpack_(const std::vector<int>& glob_cell,
     std::valarray<double> coord_center = coord;
     coord_center[0] += dx/2.0;
     coord_center[2] += dz/2.0;
+    double bcvx, bcvy, bcvz;
     forAll(bcFaceCenters, faceI) {
         face_center[0] = bcFaceCenters[faceI].x(); 
         face_center[1] = bcFaceCenters[faceI].y(); 
         face_center[2] = bcFaceCenters[faceI].z(); 
         if ((std::abs(face_center - coord_center) < tol).min()) {
-            double m = 1.0;
-            double bcvx = buffer(0, loc_cell[0], loc_cell[1], loc_cell[2])/m;
-            double bcvy = buffer(1, loc_cell[0], loc_cell[1], loc_cell[2]) /m;
-            double bcvz = buffer(2, loc_cell[0], loc_cell[1], loc_cell[2])/m;
+            bcvx = buffer(0, loc_cell[0], loc_cell[1], loc_cell[2]);
+            bcvy = buffer(1, loc_cell[0], loc_cell[1], loc_cell[2]);
+            bcvz = buffer(2, loc_cell[0], loc_cell[1], loc_cell[2]);
             if (applyBc[0]) (*bcPatch)[faceI].x() = bcvx;
             if (applyBc[1]) (*bcPatch)[faceI].y() = bcvy;
             if (applyBc[2]) (*bcPatch)[faceI].z() = bcvz;

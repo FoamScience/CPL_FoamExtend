@@ -1,5 +1,0 @@
-CPLIcoFoam.C
-IcoFOAMOutgoingField.C
-IcoFOAMIncomingField.C
-
-EXE = $(FOAM_CPL_APP_BIN)/CPLIcoFoam

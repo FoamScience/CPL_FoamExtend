@@ -87,13 +87,15 @@ int main(int argc, char *argv[])
 
     
     if (socket.sendEnabled) {
-        (new StressOutgoingField("stresscnst", socket.cnstPortionRegion, socket.cnstRegion, sigma, mesh))->addToPool(&cnstPool);
+        (new StressOutgoingField("stresscnst", socket.cnstPortionRegion, 
+                                 socket.cnstRegion, sigma, mesh))->addToPool(&cnstPool);
         cnstPool.setupAll();
         if (!socket.sendBuffAllocated)
             socket.allocateSendBuffer(cnstPool);
     }
     if (socket.recvEnabled) {
-        (new VelIncomingField("velocitybc", socket.bcPortionRegion, socket.bcRegion, U, mesh, density))->addToPool(&bcPool);
+        (new VelIncomingField("velocitybc", socket.bcPortionRegion, socket.bcRegion, 
+                              U, mesh, density))->addToPool(&bcPool);
         bcPool.setupAll();
         if (!socket.recvBuffAllocated)
             socket.allocateRecvBuffer(bcPool);
