@@ -86,19 +86,19 @@ int main(int argc, char *argv[])
         (new StressOutgoingField("stresscnst", socket.cnstPortionRegion, socket.cnstRegion, sigma, mesh))->addToPool(&cnstPool);
         cnstPool.setupAll();
         if (!socket.sendBuffAllocated)
-            socket.allocateSendBuffer(cnstPool);
+            socket.setOutgoingFieldPool(cnstPool);
     }
     if (socket.recvEnabled) {
         (new VelIncomingField("velocitybc", socket.bcPortionRegion, socket.bcRegion, U, mesh, density))->addToPool(&bcPool);
         bcPool.setupAll();
         if (!socket.recvBuffAllocated)
-            socket.allocateRecvBuffer(bcPool);
+            socket.setIncomingFieldPool(bcPool);
     }
 
    // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 	
 	// Initial communication to initialize domains
-    socket.communicate(cnstPool, bcPool);
+    socket.communicate();
 
     Info<< "\nStarting time loop\n" << endl;
     while (runTime.loop())
@@ -173,7 +173,7 @@ int main(int argc, char *argv[])
         // generated from stressComponents utility, be careful!
         sigma = density*eta_Si2eta_Md*fluid.nu()*2*dev(symm(fvc::grad(U)));
         // Pack/unpack and communicate after computing fields but before writing to file.
-        socket.communicate(cnstPool, bcPool);
+        socket.communicate();
         runTime.write();
 
         Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
@@ -182,6 +182,7 @@ int main(int argc, char *argv[])
     }
     Info<< "End\n" << endl;
 	CPL::finalize();
+    socket.printRuntimeInfo();
 
     return 0;
 }
