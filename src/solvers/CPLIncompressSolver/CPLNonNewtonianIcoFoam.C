@@ -22,7 +22,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Application
-    icoFoam
+    CPLNonNewtonianIcoFoam
 
 Description
     Transient solver for incompressible, laminar flow of Newtonian fluids.
@@ -30,6 +30,7 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "fvCFD.H"
+#include "singlePhaseTransportModel.H"
 #include "pisoControl.H"
 #include "CPLSocketFOAM.H"
 #include "StressOutgoingField.H"
@@ -39,17 +40,13 @@ Description
 
 int main(int argc, char *argv[])
 {
-    // Check args first
-
     CPLSocketFOAM socket;
     socket.initComms(argc, argv);
     socket.loadParamFile();
     CPL::get_file_param("constrain-enabled", "", socket.sendEnabled);
     CPL::get_file_param("bc-enabled", "", socket.recvEnabled);
-    // Currently density is not used here
     double density;
     CPL::get_file_param("initial-conditions", "density", density);
-
     #include "setRootCase.H"
     #include "createTime.H"
     #include "createMesh.H"
@@ -63,7 +60,6 @@ int main(int argc, char *argv[])
     CPL::get_file_param("conversion-factors", "density", den_Si2den_Md);
     CPL::get_file_param("conversion-factors", "dyn-viscosity", eta_Si2eta_Md);
     density *= den_Si2den_Md;
-    dimensionedScalar eta(density*nu*eta_Si2eta_Md);
 
     //Create stress field
     volSymmTensorField sigma
@@ -76,7 +72,7 @@ int main(int argc, char *argv[])
                     IOobject::NO_READ,
                     IOobject::AUTO_WRITE
                 ),
-                eta*2*dev(symm(fvc::grad(U)))
+                density*eta_Si2eta_Md*fluid.nu()*2*dev(symm(fvc::grad(U)))
             );
 
     #include "initContinuityErrs.H"
@@ -87,32 +83,31 @@ int main(int argc, char *argv[])
 
     
     if (socket.sendEnabled) {
-        (new StressOutgoingField("stresscnst", socket.cnstPortionRegion, 
-                                 socket.cnstRegion, sigma, mesh))->addToPool(&cnstPool);
+        (new StressOutgoingField("stresscnst", socket.cnstPortionRegion, socket.cnstRegion, sigma, mesh))->addToPool(&cnstPool);
         cnstPool.setupAll();
         if (!socket.sendBuffAllocated)
-            socket.setOutgoingFieldPool(cnstPool);
+            socket.allocateSendBuffer(cnstPool);
     }
     if (socket.recvEnabled) {
-        (new VelIncomingField("velocitybc", socket.bcPortionRegion, socket.bcRegion, 
-                              U, mesh, density))->addToPool(&bcPool);
+        (new VelIncomingField("velocitybc", socket.bcPortionRegion, socket.bcRegion, U, mesh, density))->addToPool(&bcPool);
         bcPool.setupAll();
         if (!socket.recvBuffAllocated)
-            socket.setIncomingFieldPool(bcPool);
+            socket.allocateRecvBuffer(bcPool);
     }
 
    // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 	
 	// Initial communication to initialize domains
-    socket.communicate();
+    socket.communicate(cnstPool, bcPool);
 
     Info<< "\nStarting time loop\n" << endl;
     while (runTime.loop())
     {
-
         Info<< "Time = " << runTime.timeName() << nl << endl;
 
         #include "CourantNo.H"
+
+        fluid.correct();
 
         // Momentum predictor
 
@@ -120,7 +115,8 @@ int main(int argc, char *argv[])
         (
             fvm::ddt(U)
           + fvm::div(phi, U)
-          - fvm::laplacian(nu, U)
+          - fvm::laplacian(fluid.nu(), U)
+          - (fvc::grad(U) & fvc::grad(fluid.nu()))
         );
 
         if (piso.momentumPredictor())
@@ -175,9 +171,9 @@ int main(int argc, char *argv[])
         //the correct stress but it does not matter as that is the BC region.
         // On the other hand if this is used for plotting stress instead of fields
         // generated from stressComponents utility, be careful!
-        sigma = eta*2*dev(symm(fvc::grad(U)));
+        sigma = density*eta_Si2eta_Md*fluid.nu()*2*dev(symm(fvc::grad(U)));
         // Pack/unpack and communicate after computing fields but before writing to file.
-        socket.communicate();
+        socket.communicate(cnstPool, bcPool);
         runTime.write();
 
         Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
@@ -186,7 +182,6 @@ int main(int argc, char *argv[])
     }
     Info<< "End\n" << endl;
 	CPL::finalize();
-    socket.printRuntimeInfo();
 
     return 0;
 }

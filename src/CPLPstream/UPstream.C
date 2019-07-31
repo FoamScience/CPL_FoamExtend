@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,14 +23,14 @@ License
 
 \*---------------------------------------------------------------------------*/
 
+#include "mpi.h"
+
 #include "UPstream.H"
 #include "PstreamReduceOps.H"
 #include "OSspecific.H"
 #include "PstreamGlobals.H"
 #include "SubList.H"
 #include "allReduce.H"
-
-#include <mpi.h>
 
 #include <cstring>
 #include <cstdlib>
@@ -61,12 +61,13 @@ void Foam::UPstream::addValidParOptions(HashTable<string>& validParOptions)
 
 bool Foam::UPstream::init(int& argc, char**& argv)
 {
-    MPI_Init(&argc, &argv);
+
+    //MPI_Init(&argc, &argv);
 
     int numprocs;
-    MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
+    MPI_Comm_size(Foam::PstreamGlobals::CPLRealmComm, &numprocs);
     int myRank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
+    MPI_Comm_rank(Foam::PstreamGlobals::CPLRealmComm, &myRank);
 
     if (debug)
     {
@@ -74,6 +75,8 @@ bool Foam::UPstream::init(int& argc, char**& argv)
             << " myRank:" << myRank << endl;
     }
 
+/** ->Modified for CPLPstream<-
+ 
     if (numprocs <= 1)
     {
         FatalErrorIn("UPstream::init(int& argc, char**& argv)")
@@ -81,7 +84,7 @@ bool Foam::UPstream::init(int& argc, char**& argv)
                "attempt to run parallel on 1 processor"
             << Foam::abort(FatalError);
     }
-
+**/
 
     // Initialise parallel structure
     setParRun(numprocs);
@@ -281,7 +284,7 @@ void Foam::reduce
     requestID = PstreamGlobals::outstandingRequests_.size();
     PstreamGlobals::outstandingRequests_.append(request);
 
-    if (UPstream::debug)
+    if (debug)
     {
         Pout<< "UPstream::allocateRequest for non-blocking reduce"
             << " : request:" << requestID
@@ -304,9 +307,9 @@ void Foam::UPstream::allocatePstreamCommunicator
     if (index == PstreamGlobals::MPIGroups_.size())
     {
         // Extend storage with dummy values
-        MPI_Group newGroup = MPI_GROUP_NULL;
+        MPI_Group newGroup;
         PstreamGlobals::MPIGroups_.append(newGroup);
-        MPI_Comm newComm = MPI_COMM_NULL;
+        MPI_Comm newComm;
         PstreamGlobals::MPICommunicators_.append(newComm);
     }
     else if (index > PstreamGlobals::MPIGroups_.size())
@@ -340,8 +343,8 @@ void Foam::UPstream::allocatePstreamCommunicator
                 << UPstream::worldComm << Foam::exit(FatalError);
         }
 
-        PstreamGlobals::MPICommunicators_[index] = MPI_COMM_WORLD;
-        MPI_Comm_group(MPI_COMM_WORLD, &PstreamGlobals::MPIGroups_[index]);
+        PstreamGlobals::MPICommunicators_[index] = Foam::PstreamGlobals::CPLRealmComm;
+        MPI_Comm_group(Foam::PstreamGlobals::CPLRealmComm, &PstreamGlobals::MPIGroups_[index]);
         MPI_Comm_rank
         (
             PstreamGlobals::MPICommunicators_[index],
@@ -351,13 +354,7 @@ void Foam::UPstream::allocatePstreamCommunicator
         // Set the number of processes to the actual number
         int numProcs;
         MPI_Comm_size(PstreamGlobals::MPICommunicators_[index], &numProcs);
-
-        //procIDs_[index] = identity(numProcs);
-        procIDs_[index].setSize(numProcs);
-        forAll(procIDs_[index], i)
-        {
-            procIDs_[index][i] = i;
-        }
+        procIDs_[index] = identity(numProcs);
     }
     else
     {

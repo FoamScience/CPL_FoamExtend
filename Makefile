@@ -7,7 +7,11 @@ all:
 	wmake libso src/CPLPstream
 	wmake libso src/CPLSocketFOAM
 	wmake src/solvers/CPLIcoFoam
-	wmake src/solvers/CPLNonNewtonianIcoFoam
+	# wmake src/solvers/CPLNonNewtonianIcoFoam
+
+	
+non-coupled:
+	wmake libso src/Pstream
 	wmake src/solvers/thermalIcoFoam
 	
 patch-openfoam:
