@@ -86,5 +86,5 @@ for step in xrange(1, nsteps+1):
     cpllib.recv(recv_array, cnstFRegion)
     cpllib.send(send_array, velBCRegion)
     cpllib.dump_region(cnstFRegion, recv_array, "md_forces%d.dat" % step, realm_comm, 
-            components={1:None, 4:None, 7:None}, coords="other")
+            components={1:None, 4:None, 7:None}, dec_figures=10, coords="other")
 cpllib.finalize()

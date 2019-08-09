@@ -32,9 +32,10 @@ class IcoFOAMIncomingField : public CPL::IncomingField {
 class VelIncomingField:  public IcoFOAMIncomingField {
     public:
         using IcoFOAMIncomingField::IcoFOAMIncomingField;
-        void unpack_(const std::vector<int>& glob_cell,
-                     const std::vector<int>& loc_cell,
-                     const std::valarray<double>& coord);
+        // void unpack_(const std::vector<int>& glob_cell,
+        //              const std::vector<int>& loc_cell,
+        //              const std::valarray<double>& coord);
+        bool unpackCustom_();
         void setup();
         void update();
         std::vector<int> applyBc;

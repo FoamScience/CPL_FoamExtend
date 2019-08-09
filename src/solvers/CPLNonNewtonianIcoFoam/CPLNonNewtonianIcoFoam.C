@@ -40,11 +40,11 @@ Description
 
 int main(int argc, char *argv[])
 {
-    CPLSocketFOAM socket;
-    socket.initComms(argc, argv);
-    socket.loadParamFile();
-    CPL::get_file_param("constrain-enabled", "", socket.sendEnabled);
-    CPL::get_file_param("bc-enabled", "", socket.recvEnabled);
+    CPLSocketFOAM cplsocket;
+    cplsocket.initComms(argc, argv);
+    cplsocket.loadParamFile();
+    CPL::get_file_param("constrain-enabled", "", cplsocket.sendEnabled);
+    CPL::get_file_param("bc-enabled", "", cplsocket.recvEnabled);
     double density;
     CPL::get_file_param("initial-conditions", "density", density);
     #include "setRootCase.H"
@@ -76,29 +76,29 @@ int main(int argc, char *argv[])
             );
 
     #include "initContinuityErrs.H"
-    socket.setOpenFOAM(runTime, mesh);
-    socket.init();
-    CPL::OutgoingFieldPool cnstPool(socket.cnstPortionRegion, socket.cnstRegion);
-    CPL::IncomingFieldPool bcPool(socket.bcPortionRegion, socket.bcRegion); 
+    cplsocket.setOpenFOAM(runTime, mesh);
+    cplsocket.init();
+    CPL::OutgoingFieldPool cnstPool(cplsocket.cnstPortionRegion, cplsocket.cnstRegion);
+    CPL::IncomingFieldPool bcPool(cplsocket.bcPortionRegion, cplsocket.bcRegion); 
 
     
-    if (socket.sendEnabled) {
-        (new StressOutgoingField("stresscnst", socket.cnstPortionRegion, socket.cnstRegion, sigma, mesh))->addToPool(&cnstPool);
+    if (cplsocket.sendEnabled) {
+        (new StressOutgoingField("stresscnst", cplsocket.cnstPortionRegion, cplsocket.cnstRegion, sigma, mesh))->addToPool(&cnstPool);
         cnstPool.setupAll();
-        if (!socket.sendBuffAllocated)
-            socket.setOutgoingFieldPool(cnstPool);
+        if (!cplsocket.sendBuffAllocated)
+            cplsocket.setOutgoingFieldPool(cnstPool);
     }
-    if (socket.recvEnabled) {
-        (new VelIncomingField("velocitybc", socket.bcPortionRegion, socket.bcRegion, U, mesh, density))->addToPool(&bcPool);
+    if (cplsocket.recvEnabled) {
+        (new VelIncomingField("velocitybc", cplsocket.bcPortionRegion, cplsocket.bcRegion, U, mesh, density))->addToPool(&bcPool);
         bcPool.setupAll();
-        if (!socket.recvBuffAllocated)
-            socket.setIncomingFieldPool(bcPool);
+        if (!cplsocket.recvBuffAllocated)
+            cplsocket.setIncomingFieldPool(bcPool);
     }
 
    // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 	
 	// Initial communication to initialize domains
-    socket.communicate();
+    cplsocket.communicate();
 
     Info<< "\nStarting time loop\n" << endl;
     while (runTime.loop())
@@ -173,7 +173,7 @@ int main(int argc, char *argv[])
         // generated from stressComponents utility, be careful!
         sigma = density*eta_Si2eta_Md*fluid.nu()*2*dev(symm(fvc::grad(U)));
         // Pack/unpack and communicate after computing fields but before writing to file.
-        socket.communicate();
+        cplsocket.communicate();
         runTime.write();
 
         Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
@@ -181,8 +181,8 @@ int main(int argc, char *argv[])
             << nl << endl;
     }
     Info<< "End\n" << endl;
-	CPL::finalize();
-    socket.printRuntimeInfo();
+    cplsocket.printRuntimeInfo();
+    cplsocket.finalizeComms();
 
     return 0;
 }
