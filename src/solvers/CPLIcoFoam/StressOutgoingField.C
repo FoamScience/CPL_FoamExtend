@@ -10,37 +10,42 @@ void StressOutgoingField::pack_(const std::vector<int>& glob_cell,
     Foam::point globalPos = Foam::point((glob_cell[0] + 0.5) * dx,
 									    (glob_cell[1] + 0.5) * dy, 
 									    (glob_cell[2] + 0.5) * dz);
-	cell = meshSearcher->findNearestCell(globalPos);
-    // Foam::point globalPos1 = Foam::point((glob_cell[0] + 0.5) * dx,
-	// 								    (glob_cell[1] + 1.5) * dy, 
-	// 								    (glob_cell[2] + 0.5) * dz);
-    // Foam::point globalPos2 = Foam::point((glob_cell[0] + 0.5) * dx,
-	// 								    (glob_cell[1] + 0.5) * dy, 
-	// 								    (glob_cell[2] + 0.5) * dz);
-    // //
-	// Foam::label cell1 = meshSearcher->findNearestCell(globalPos1);
-	// Foam::label cell2 = meshSearcher->findNearestCell(globalPos2);
 
-    
-    // std::stringstream ss;
-    if (cell != -1) {
-        // Do interpolation 
-        if (compute_mode == "plane") {
-            const Foam::cell& faces = foamMesh->cells()[cell];
-            forAll( faces, i )  {
-                if (foamMesh->isInternalFace(faces[i])) {
-                    Foam::vector faceINormal = foamMesh->Sf()[faces[i]] / foamMesh->magSf()[faces[i]] ; 
-                    Foam::label cell_neigh = foamMesh->neighbour()[faces[i]];
-                    // OpenFOAM set faces'  normal sign using cell numbering. From lower to higher is positive.
-                    if (faceINormal == Foam::vector(0, 1, 0) && cell_neigh > cell) {
-                        cell = faces[i];
-                        // ss << " i = " << i << "- stress ("<< cell << "," << cell_neigh <<") :" << stressField[cell].xy() <<" - "<< ((*sigma)[cell2].xy() + (*sigma)[cell1].xy())/2.0;
-                        // std::cout << ss.str() << std::endl;
-                        break;
+    if (cell_array_init < nof_cells) {
+        cell_array_init += 1;
+        cell = meshSearcher->findNearestCell(globalPos);
+        // std::stringstream ss;
+        if (cell != -1) {
+            // Do interpolation 
+            if (compute_mode == "plane") {
+                const Foam::cell& faces = foamMesh->cells()[cell];
+                forAll( faces, i )  {
+                    if (foamMesh->isInternalFace(faces[i])) {
+                        Foam::vector faceINormal = foamMesh->Sf()[faces[i]] / foamMesh->magSf()[faces[i]] ; 
+                        Foam::label cell_neigh = foamMesh->neighbour()[faces[i]];
+                        // OpenFOAM set faces'  normal sign using cell numbering. From lower to higher is positive.
+                        if (faceINormal == Foam::vector(0, 1, 0) && cell_neigh > cell) {
+                            cell = faces[i];
+                            // ss << " i = " << i << "- stress ("<< cell << "," << cell_neigh <<") :" << stressField[cell].xy() <<" - "<< ((*sigma)[cell2].xy() + (*sigma)[cell1].xy())/2.0;
+                            // std::cout << ss.str() << std::endl;
+                            break;
+                        }
                     }
                 }
             }
-        }
+            cell_array(loc_cell[0], loc_cell[1], loc_cell[2]) = cell;
+        } 
+        else
+            std::cerr << "Warning: The point (" << (glob_cell[0]+0.5)*dx << "," << 
+                        (glob_cell[1]+0.5)*dy << "," << (glob_cell[2]+0.5)*dz << 
+                        ") is outside the mesh for whatever reason! - Cell: " << 
+                        cell << std::endl;
+    }
+    else {
+        cell = cell_array(loc_cell[0], loc_cell[1], loc_cell[2]);
+    }
+    if (cell != -1) {
+        // Update buffer
         buffer(0,loc_cell[0],loc_cell[1],loc_cell[2]) = stressField[cell].xx();
         buffer(1,loc_cell[0],loc_cell[1],loc_cell[2]) = stressField[cell].xy();
         buffer(2,loc_cell[0],loc_cell[1],loc_cell[2]) = stressField[cell].xz();
@@ -50,19 +55,16 @@ void StressOutgoingField::pack_(const std::vector<int>& glob_cell,
         buffer(6,loc_cell[0],loc_cell[1],loc_cell[2]) = stressField[cell].xz();
         buffer(7,loc_cell[0],loc_cell[1],loc_cell[2]) = stressField[cell].yz();
         buffer(8,loc_cell[0],loc_cell[1],loc_cell[2]) = stressField[cell].zz();
-    } 
-    else
-        std::cerr << "Warning: The point (" << (glob_cell[0]+0.5)*dx << "," << 
-                    (glob_cell[1]+0.5)*dy << "," << (glob_cell[2]+0.5)*dz << 
-                    ") is outside the mesh for whatever reason! - Cell: " << 
-                    cell << std::endl;
-
+    }
 }
 
 void StressOutgoingField::setup() {
     CPL::get_file_param("constrain.momentum", "compute-mode", compute_mode);
     if (compute_mode != "plane" && compute_mode != "cell")
         std::cout<< "Error mode compute stress." << "mode " << compute_mode <<std::endl;
+    cell_array =  CPL::ndArray<Foam::label>(3, nCells.data());
+    cell_array_init = 0;
+    nof_cells = nCells[0]*nCells[1]*nCells[2];
     meshSearcher = new Foam::meshSearch(*foamMesh);
     data_size = 9;
     update();

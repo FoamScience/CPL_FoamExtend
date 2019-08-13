@@ -33,7 +33,7 @@ except:
     print("ERROR: ", sys.exc_info()[0], file=sys.stderr)
     MPI.COMM_WORLD.Abort(errorcode=1)
 
-nsteps = 1
+nsteps = 2
 dt = 0.01
 xyz_orig = np.array([0.0, 0.0, 0.0], order='F', dtype=np.float64)
 NProcs = NPx*NPy*NPz

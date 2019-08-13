@@ -6,6 +6,7 @@
 #include "fvCFD.H"
 #include "meshSearch.H"
 #include <valarray>
+#include "cpl/CPL_ndArray.h"
 
 class IcoFOAMOutgoingField : public CPL::OutgoingField {
     public:
@@ -35,6 +36,9 @@ class StressOutgoingField:  public IcoFOAMOutgoingField {
         void update();
         Foam::symmTensorField stressField;
         std::string compute_mode;
+        CPL::ndArray<Foam::label> cell_array; 
+        int cell_array_init;
+        int nof_cells;
         virtual ~StressOutgoingField() {}
 };
 
