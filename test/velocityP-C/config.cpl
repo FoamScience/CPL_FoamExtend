@@ -1,10 +1,13 @@
 {
 "constrain-enabled": true,
 "bc-enabled": true,
+
 "constrain" : {
     "momentum": {
+        "enabled": true,
         "type": "Flekkoy",
         "unit-conversion": "disabled",
+        "components": [1, 1, 1],
         "compute-mode": "cell"
     },
     "mass": {
@@ -16,10 +19,24 @@
 },
 
 "bc": {
+    "dimension" : "1d",
+    "sendtype" : "velocity",
     "velocity": {
         "compute-mode": "above",
-        "components": [1, 1, 1]
+        "components": [1, 1, 1],
+        "average-vels": true,
+        "samples": 1
+    },
+    "temperature": {
+        "enabled": false
     }
+},
+
+"coupling-mesh": {
+    "from-cfd" : true,
+    "ncx" : 0,
+    "ncy" : 0,
+    "ncz" : 0 
 },
 
 "initial-conditions" : {
