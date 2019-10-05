@@ -93,8 +93,13 @@ void CPLSocketFOAM::setRealmDomainInfo() {
     Foam::blockMesh blocks(blockMeshDict, dummyRegionName);
     Foam::Vector<int> meshDensity = blocks[0].meshDensity();
     // Global number of cells
-    cfdCells = std::vector<int>({meshDensity.x(), meshDensity.y(),
-                                 meshDensity.z()});
+    int ncx, ncy, ncz;
+    CPL::get_file_param("coupling-mesh", "ncx", ncx);
+    CPL::get_file_param("coupling-mesh", "ncy", ncy);
+    CPL::get_file_param("coupling-mesh", "ncz", ncz);
+    cfdCells = std::vector<int>({ncx, ncy, ncz});
+    // cfdCells = std::vector<int>({meshDensity.x(), meshDensity.y(),
+    //                              meshDensity.z()});
     std::valarray<double> domain_orig({0.0, 0.0, 0.0});
     realmDomain = CPL::Domain(domain_orig, domain_length);
 }
