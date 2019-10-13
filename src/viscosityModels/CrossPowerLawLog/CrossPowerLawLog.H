@@ -58,7 +58,7 @@ class CrossPowerLawLog
 
         dictionary CrossPowerLawLogCoeffs_;
 
-        dimensionedScalar nu0_cutoff_;
+        dimensionedScalar srate_cutoff_;
         dimensionedScalar nu0_;
         dimensionedScalar nuInf_;
         dimensionedScalar m_;
