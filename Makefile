@@ -6,6 +6,7 @@ OpenFOAM_ETC_DIR=$(OpenFOAM_ETC_DIR)/etc
 all:
 	wmake libso src/CPLPstream
 	wmake libso src/CPLSocketFOAM
+	wmake libso src/viscosityModels/CrossPowerLawLog
 	wmake src/solvers/CPLIcoFoam
 	wmake src/solvers/CPLNonNewtonianIcoFoam
 
@@ -19,6 +20,7 @@ patch-openfoam:
 
 clean:
 	wclean src/CPLSocketFOAM
+	wclean src/viscosityModels/CrossPowerLawLog
 	wclean src/solvers/CPLNonNewtonianIcoFoam
 	wclean src/solvers/CPLThermalIcoFoam
 	wclean src/solvers/thermalIcoFoam
