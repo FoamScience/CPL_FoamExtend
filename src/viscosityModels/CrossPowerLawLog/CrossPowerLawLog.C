@@ -50,9 +50,10 @@ namespace viscosityModels
 Foam::tmp<Foam::volScalarField>
 Foam::viscosityModels::CrossPowerLawLog::calcNu() const
 {
+    
     // Added 1e-15 to avoid log10(0) undefined behaviour
     Foam::tmp<Foam::volScalarField> nu_out =\
-                                   (nu0_ - nuInf_)/(scalar(1) + pow(m_*Foam::log10(timeFactor_*(strainRate()+1e-15)), n_)) + nuInf_;
+                                   (nu0_ - nuInf_)/(scalar(1) + pow(m_*Foam::log10(timeFactor_*strainRate()+scalar(1e-15)), n_)) + nuInf_;
     Foam::tmp<Foam::volScalarField> srate = strainRate();
     forAll(srate(), celli) {
         if (srate()[celli] > srate_cutoff_.value())
