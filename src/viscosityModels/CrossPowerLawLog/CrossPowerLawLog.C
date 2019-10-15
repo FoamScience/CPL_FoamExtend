@@ -51,7 +51,7 @@ Foam::tmp<Foam::volScalarField>
 Foam::viscosityModels::CrossPowerLawLog::calcNu() const
 {
     Foam::tmp<Foam::volScalarField> nu_out =\
-                                   (nu0_ - nuInf_)/(scalar(1) + pow(m_*Foam::log10(timeFactor_*strainRate()), n_)) + nuInf_;
+                                   (nu0_ - nuInf_)/(scalar(1) + pow(m_*Foam::log10(timeFactor_*Foam::abs(strainRate())), n_)) + nuInf_;
     Foam::tmp<Foam::volScalarField> srate = strainRate();
     forAll(srate(), celli) {
         if (srate()[celli] > srate_cutoff_.value())
