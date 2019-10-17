@@ -1,0 +1,3 @@
+stressComponents.C
+
+EXE = $(FOAM_CPL_APP_BIN)/CPLStressComponents

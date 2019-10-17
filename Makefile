@@ -7,12 +7,15 @@ all:
 	wmake libso src/CPLPstream
 	wmake libso src/CPLSocketFOAM
 	wmake libso src/viscosityModels/CrossPowerLawLog
+	wmake src/tools/stressComponents
 	wmake src/solvers/CPLIcoFoam
 	wmake src/solvers/CPLNonNewtonianIcoFoam
 
 	
 non-coupled:
 	wmake libso src/Pstream
+	wmake libso src/viscosityModels/CrossPowerLawLog
+	wmake src/tools/stressComponents
 	wmake src/solvers/thermalIcoFoam
 	
 patch-openfoam:
@@ -20,6 +23,7 @@ patch-openfoam:
 
 clean:
 	wclean src/CPLSocketFOAM
+	wclean src/tools/stressComponents
 	wclean src/viscosityModels/CrossPowerLawLog
 	wclean src/solvers/CPLNonNewtonianIcoFoam
 	wclean src/solvers/CPLThermalIcoFoam

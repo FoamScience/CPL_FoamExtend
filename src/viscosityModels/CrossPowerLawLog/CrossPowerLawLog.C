@@ -51,14 +51,17 @@ Foam::tmp<Foam::volScalarField>
 Foam::viscosityModels::CrossPowerLawLog::calcNu() const
 {
     
-    // Added 1e-15 to avoid log10(0) undefined behaviour
+    // Added 1.0 to avoid log10(0) undefined behaviour
+    // Info << Foam::log10(timeFactor_*strainRate()+scalar(1)) << " " << timeFactor_*strainRate() << " " << nl << endl;
     Foam::tmp<Foam::volScalarField> nu_out =\
-                                   (nu0_ - nuInf_)/(scalar(1) + pow(m_*Foam::log10(timeFactor_*strainRate()+scalar(1e-15)), n_)) + nuInf_;
+                                   (nu0_ - nuInf_)/(scalar(1) + pow(m_*Foam::log10(timeFactor_*strainRate()+scalar(1)), n_)) + nuInf_;
     Foam::tmp<Foam::volScalarField> srate = strainRate();
     forAll(srate(), celli) {
+        // cout << "cell: " << celli << ", " << nu_out()[celli] << std::endl;
         if (srate()[celli] > srate_cutoff_.value())
             nu_out()[celli] = 0.0;
     }
+    // Info << nu_out() << nl << endl;
     return nu_out;
 }
 
