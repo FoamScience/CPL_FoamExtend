@@ -15,4 +15,5 @@ EXE_LIBS = \
     -L$(CPL_LIBRARY_PATH) -Wl,-rpath=$(CPL_LIBRARY_PATH) \
     -lfiniteVolume \
     -lblockMesh \
+    -lCPLViscosityModels \
     -lCPLSocketFOAM

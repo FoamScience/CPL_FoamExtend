@@ -1,3 +1,0 @@
-CrossPowerLawLog.C
-
-LIB = $(FOAM_CPL_APP_LIBBIN)/libCPLViscosityModels

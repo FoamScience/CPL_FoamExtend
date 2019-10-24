@@ -6,7 +6,7 @@ OpenFOAM_ETC_DIR=$(OpenFOAM_ETC_DIR)/etc
 all:
 	wmake libso src/CPLPstream
 	wmake libso src/CPLSocketFOAM
-	wmake libso src/viscosityModels/CrossPowerLawLog
+	wmake libso src/viscosityModels
 	wmake src/tools/stressComponents
 	wmake src/solvers/CPLIcoFoam
 	wmake src/solvers/CPLNonNewtonianIcoFoam
@@ -14,9 +14,10 @@ all:
 	
 non-coupled:
 	wmake libso src/Pstream
-	wmake libso src/viscosityModels/CrossPowerLawLog
+	wmake libso src/viscosityModels
 	wmake src/tools/stressComponents
 	wmake src/solvers/thermalIcoFoam
+	wmake src/solvers/thermalNonNewtonianIcoFoam
 	
 patch-openfoam:
 	cp ./config/pref.sh $(OpenFOAM_ETC_DIR)/config/
@@ -24,7 +25,7 @@ patch-openfoam:
 clean:
 	wclean src/CPLSocketFOAM
 	wclean src/tools/stressComponents
-	wclean src/viscosityModels/CrossPowerLawLog
+	wclean src/viscosityModels
 	wclean src/solvers/CPLNonNewtonianIcoFoam
 	wclean src/solvers/CPLThermalIcoFoam
 	wclean src/solvers/thermalIcoFoam
