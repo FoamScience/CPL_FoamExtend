@@ -36,6 +36,20 @@ Installation of the Foam-Extend socket
 Please skim through the Docker files for installation instructions on Ubuntu 20.04 LTS
 (you can ignore the SSH-related commands in there).
 
+I don't want to run things in Docker containers
+===============================================
+
+Unfortunately, we need to override some code in the `Pstreams` part of the `foam` library. If you do this
+on your regular installation, you'll probably break it.
+
+You can always dedicate a Foam-Extend installation to this task, but then you'll have to patches present in `DockerFiles`
+directory.
+
+> If your Foam-Extend is compiled with MPICH, you can get away with pre-loading the patched `libfoam.so` shared
+> library to prevent the original one from loading with `LD_PRELOAD=/path/to/patched/lib.so <your-solver>`
+>
+> But that is highly discouraged, please use the docker container instead!
+
 License
 =======
 
