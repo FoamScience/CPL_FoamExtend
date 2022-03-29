@@ -1,4 +1,3 @@
-
 Foam-Extend CPL socket
 ======================
 
@@ -21,10 +20,21 @@ Important notes about the Docker image
 - `~/lammps` holds the patched LAMMPS installation
 
 
-Installation
-============
+How to use the Docker image
+===========================
 
-Please skim through the Docker files for installation instructions on Ubuntu 20.04 LTS (you can ignore the SSH-related commands in there).
+1. Install Docker if you don't have it yet: `bash <(curl -s https://get.docker.com/)`
+2. Pull the image `docker pull foamscience/fe4-mpich-cpl-lammps`
+3. Create a temporary container to play around with the library `docker run --rm -it foamscience/fe4-mpich-cpl-lammps bash`
+4. You can then clone this repo there and compile `src/CPLSocketFoam` library.
+
+In the container; `/cpl-library/examples/LAMMPS-OPENFOAM` has an example case with the patched `icoFoam`.
+
+Installation of the Foam-Extend socket
+======================================
+
+Please skim through the Docker files for installation instructions on Ubuntu 20.04 LTS
+(you can ignore the SSH-related commands in there).
 
 License
 =======
