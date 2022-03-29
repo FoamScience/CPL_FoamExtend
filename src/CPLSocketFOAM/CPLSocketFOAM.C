@@ -60,7 +60,7 @@ void CPLSocketFOAM::initComms (int& argc, char**& argv) {
     if (flag == 0)
 		MPI_Init(&argc, &argv);
     CPL::init (CPL::cfd_realm, realmComm);
-	Foam::PstreamGlobals::CPLRealmComm = realmComm;
+    ::Foam::PstreamGlobals::MPI_COMM_FOAM = realmComm;
     MPI_Comm_rank (realmComm, &rankRealm);
 
 }
@@ -446,7 +446,7 @@ double CPLSocketFOAM::unpackVelocity(volVectorField &U, fvMesh &mesh)
 
 		// Patch receiving B.Cs
 		Foam::string receivePatchName ("CPLReceiveMD");
-		Foam::label rvPatchID = mesh.boundary().findPatchID(receivePatchName);
+		Foam::label rvPatchID = mesh.boundaryMesh().findPatchID(receivePatchName);
 
 		if (rvPatchID == -1) {
 			FatalErrorIn ( "CPLSocketFOAM::unpack()")
@@ -578,7 +578,7 @@ double CPLSocketFOAM::unpackVelocityPressure(volVectorField &U, volScalarField &
 
 		// Patch receiving B.Cs
 		Foam::string receivePatchName ("CPLReceiveMD");
-		Foam::label rvPatchID = mesh.boundary().findPatchID(receivePatchName);
+		Foam::label rvPatchID = mesh.boundaryMesh().findPatchID(receivePatchName);
 
 		if (rvPatchID == -1) {
 			FatalErrorIn ( "CPLSocketFOAM::unpack()")

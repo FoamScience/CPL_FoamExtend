@@ -1,10 +1,16 @@
+include $(RULES)/mplib$(WM_MPLIB)
+
+
 CPP_DIRECTIVE = -std=c++11 \
     -Wno-old-style-cast
-EXE_INC = \
+EXE_INC = $(PFLAGS) $(PINC) \
+    $(PINC) \
     $(CPP_DIRECTIVE) \
+    -I$(LIB_SRC)/foam/lnInclude \
     -I$(LIB_SRC)/finiteVolume/lnInclude \
     -I$(LIB_SRC)/mesh/blockMesh/lnInclude \
     -I$(LIB_SRC)/meshTools/lnInclude \
+    -I$(LIB_SRC)/lagrangian/basic/lnInclude \
     -I$(CONDA_PREFIX)/include/cpl \
     $(MPI_ARCH_INC) \
     -I$(FOAM_CPL_APP_SRC)/CPLPstream/lnInclude \
@@ -12,9 +18,13 @@ EXE_INC = \
 
 
 LIB_LIBS = \
+    $(PLIBS) \
     -Wl,-rpath=$(MPI_ARCH_PATH)/lib \
     -L$(FOAM_CPL_APP_LIBBIN) -Wl,-rpath=$(FOAM_CPL_APP_LIBBIN) \
+    -lfoam \
     -lfiniteVolume \
+    -lblockMesh \
+    -lmeshTools \
     -lcpl \
-    -lPstream \
+    -llagrangian \
     -L$(CPL_LIBRARY_PATH) -Wl,-rpath=$(CPL_LIBRARY_PATH)
