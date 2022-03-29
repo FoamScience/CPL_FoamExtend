@@ -1,0 +1,92 @@
+From 74a51058507e10b747855204b27c67e76ba2eecd Mon Sep 17 00:00:00 2001
+From: Your Name <you@example.com>
+Date: Tue, 29 Mar 2022 09:44:48 +0000
+Subject: [PATCH] Patch pstreams
+
+---
+ src/foam/db/IOstreams/Pstreams/Pstream.C | 62 ++++++++++++------------
+ 1 file changed, 31 insertions(+), 31 deletions(-)
+
+diff --git a/src/foam/db/IOstreams/Pstreams/Pstream.C b/src/foam/db/IOstreams/Pstreams/Pstream.C
+index 17f20205..276743b5 100644
+--- a/src/foam/db/IOstreams/Pstreams/Pstream.C
++++ b/src/foam/db/IOstreams/Pstreams/Pstream.C
+@@ -571,30 +571,30 @@ void Foam::Pstream::addValidParOptions(HashTable<string>& validParOptions)
+ 
+ bool Foam::Pstream::init(int& argc, char**& argv, const bool needsThread)
+ {
+-    int provided_thread_support;
+-
+-    MPI_Init_thread
+-    (
+-        &argc,
+-        &argv,
+-        (
+-            needsThread
+-          ? MPI_THREAD_MULTIPLE
+-          : MPI_THREAD_SINGLE
+-        ),
+-        &provided_thread_support
+-    );
+-
+-    int myGlobalRank;
+-    MPI_Comm_rank(MPI_COMM_WORLD, &myGlobalRank);
+-
+-    MPI_Comm_split
+-    (
+-        MPI_COMM_WORLD,
+-        1,
+-        myGlobalRank,
+-        &PstreamGlobals::MPI_COMM_FOAM
+-    );
++    int provided_thread_support =  0;
++
++    //MPI_Init_thread
++    //(
++    //    &argc,
++    //    &argv,
++    //    (
++    //        needsThread
++    //      ? MPI_THREAD_MULTIPLE
++    //      : MPI_THREAD_SINGLE
++    //    ),
++    //    &provided_thread_support
++    //);
++
++    //int myGlobalRank;
++    //MPI_Comm_rank(MPI_COMM_WORLD, &myGlobalRank);
++
++    //MPI_Comm_split
++    //(
++    //    MPI_COMM_WORLD,
++    //    1,
++    //    myGlobalRank,
++    //    &PstreamGlobals::MPI_COMM_FOAM
++    //);
+ 
+     int numprocs;
+     MPI_Comm_size(PstreamGlobals::MPI_COMM_FOAM, &numprocs);
+@@ -607,13 +607,13 @@ bool Foam::Pstream::init(int& argc, char**& argv, const bool needsThread)
+             << " myRank:" << myRank << endl;
+     }
+ 
+-    if (numprocs <= 1)
+-    {
+-        FatalErrorInFunction
+-            << "bool IPstream::init(int& argc, char**& argv) : "
+-               "attempt to run parallel on 1 processor"
+-            << Foam::abort(FatalError);
+-    }
++    //if (numprocs <= 1)
++    //{
++    //    FatalErrorInFunction
++    //        << "bool IPstream::init(int& argc, char**& argv) : "
++    //           "attempt to run parallel on 1 processor"
++    //        << Foam::abort(FatalError);
++    //}
+ 
+     // Initialise parallel structure
+     setParRun(numprocs, provided_thread_support == MPI_THREAD_MULTIPLE);
+-- 
+2.25.1
+

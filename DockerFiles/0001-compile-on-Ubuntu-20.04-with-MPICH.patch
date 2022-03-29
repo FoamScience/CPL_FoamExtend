@@ -1,0 +1,96 @@
+From 83b90cbdd73159fb37079857beecdc7615f576e2 Mon Sep 17 00:00:00 2001
+From: Elwardi <elwardi.fadeli@tu-darmstadt.de>
+Date: Thu, 24 Mar 2022 12:32:21 +0100
+Subject: [PATCH] compile on Ubuntu 20.04 with MPICH
+
+---
+ ThirdParty/tools/makeThirdPartyFunctionsForRPM | 8 ++++----
+ etc/bashrc                                     | 6 +++++-
+ wmake/rules/linux64Gcc/c                       | 2 +-
+ wmake/rules/linux64Gcc/c++                     | 2 +-
+ 4 files changed, 11 insertions(+), 7 deletions(-)
+
+diff --git a/ThirdParty/tools/makeThirdPartyFunctionsForRPM b/ThirdParty/tools/makeThirdPartyFunctionsForRPM
+index 8ce88cc1..3efcabbf 100755
+--- a/ThirdParty/tools/makeThirdPartyFunctionsForRPM
++++ b/ThirdParty/tools/makeThirdPartyFunctionsForRPM
+@@ -181,10 +181,10 @@ rpm_build()
+ 
+     #Build RPM package
+     echo "Building package $package using SPEC file : $specFile. Optional args: $@"
+-    #rpmbuild --define "_topdir $buildBase" --dbpath $buildBase/rpmDB --clean -bb ./SPECS/$specFile "$@"
++    #rpmbuild --define "_build_id_links none" --define "_topdir $buildBase" --dbpath $buildBase/rpmDB --clean -bb ./SPECS/$specFile "$@"
+     #
+     # Let's keep the compilation directory alive for now in order to facilitate postmortems of failed compilations
+-    rpmbuild --define "_build_id_links none" --define "_topdir $buildBase" --dbpath $buildBase/rpmDB -bb ./SPECS/$specFile "$@"
++    rpmbuild --define "_build_id_links none" --define "_build_id_links none" --define "_topdir $buildBase" --dbpath $buildBase/rpmDB -bb ./SPECS/$specFile "$@"
+ }
+ 
+ #
+@@ -206,10 +206,10 @@ rpm_build_install_stage_only()
+ 
+     #Build RPM package
+     echo "Building package $package using SPEC file : $specFile. Optional args: $@"
+-    #rpmbuild --define "_topdir $buildBase" --dbpath $buildBase/rpmDB --clean -bb ./SPECS/$specFile "$@"
++    #rpmbuild --define "_build_id_links none" --define "_topdir $buildBase" --dbpath $buildBase/rpmDB --clean -bb ./SPECS/$specFile "$@"
+     #
+     # Let's keep the compilation directory alive for now in order to facilitate postmortems of failed compilations
+-    rpmbuild --define "_topdir $buildBase" --dbpath $buildBase/rpmDB --short-circuit -bi ./SPECS/$specFile "$@"
++    rpmbuild --define "_build_id_links none" --define "_topdir $buildBase" --dbpath $buildBase/rpmDB --short-circuit -bi ./SPECS/$specFile "$@"
+ }
+ 
+ #
+diff --git a/etc/bashrc b/etc/bashrc
+index 1910c8c9..c6cb5baf 100755
+--- a/etc/bashrc
++++ b/etc/bashrc
+@@ -192,7 +192,7 @@ export WM_COMPILER_LIB_ARCH=
+ : ${WM_COMPILE_OPTION:=Opt}; export WM_COMPILE_OPTION
+ 
+ # WM_MPLIB = SYSTEMOPENMPI | OPENMPI | MPICH | MPICH-GM | HPMPI | GAMMA | MPI | QSMPI | MVAPICH2
+-: ${WM_MPLIB:=SYSTEMOPENMPI}; export WM_MPLIB
++: ${WM_MPLIB:=MPICH}; export WM_MPLIB
+ 
+ # WM_NCOMPPROCS = <number of processes to use>
+ # Warning: Need to use a complete path for foamGetSystemInfo because the PATH
+@@ -533,6 +533,11 @@ USAGE
+ esac
+ 
+ 
++# Configure MPI include dir
++sudo mkdir -p $MPI_ARCH_PATH
++sudo rm -rf $MPI_ARCH_PATH/include
++sudo ln -sf /usr/include/x86_64-linux-gnu/mpich $MPI_ARCH_PATH/include
++
+ # Clean standard environment variables (PATH, LD_LIBRARY_PATH, MANPATH)
+ # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ cleanProg=$WM_PROJECT_DIR/bin/foamCleanPath
+diff --git a/wmake/rules/linux64Gcc/c b/wmake/rules/linux64Gcc/c
+index f4114be3..33e81aaa 100644
+--- a/wmake/rules/linux64Gcc/c
++++ b/wmake/rules/linux64Gcc/c
+@@ -2,7 +2,7 @@
+ 
+ cWARN        = -Wall
+ 
+-cc          = gcc -m64
++cc          = $(WM_CC) -m64
+ 
+ include $(RULES)/c$(WM_COMPILE_OPTION)
+ 
+diff --git a/wmake/rules/linux64Gcc/c++ b/wmake/rules/linux64Gcc/c++
+index 19e6f87c..a8dd7dbc 100644
+--- a/wmake/rules/linux64Gcc/c++
++++ b/wmake/rules/linux64Gcc/c++
+@@ -5,7 +5,7 @@ c++WARN     = -Wall -Wextra -Wno-unused-parameter -Wold-style-cast -Wnon-virtual
+ # Suppress some warnings for flex++ and CGAL
+ c++LESSWARN = -Wno-old-style-cast -Wno-unused-local-typedefs -Wno-array-bounds
+ 
+-CC          = g++ -std=c++11 -m64
++CC          = $(WM_CXX) -std=c++11 -m64
+ 
+ include $(RULES)/c++$(WM_COMPILE_OPTION)
+ 
+-- 
+2.25.1
+
