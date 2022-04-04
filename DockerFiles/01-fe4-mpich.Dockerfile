@@ -60,18 +60,6 @@ RUN chmod -R 600 ${SSHDIR}* && \
     chown -R ${USER}:${USER} ${SSHDIR}
 
 # ------------------------------------------------------------
-# Configure MPI and set ownership on /data
-# ------------------------------------------------------------
-
-USER root
-
-RUN rm -fr ${HOME}/.openmpi && mkdir -p ${HOME}/.openmpi
-ADD default-mca-params.conf ${HOME}/.openmpi/mca-params.conf
-RUN chown -R ${USER}:${USER} ${HOME}/.openmpi
-RUN mkdir ${HOME}/data
-RUN chown -R ${USER}:${USER} ${HOME}/data
-
-# ------------------------------------------------------------
 # Get, Patch and Compile foam-extend-5.0
 # ------------------------------------------------------------
 
@@ -79,7 +67,7 @@ USER openfoam
 
 ENV FOAM_REPO_URL https://git.code.sf.net/p/foam-extend/foam-extend-4.1
 ENV FOAM_BRANCH   nextRelease
-ENV FOAM_VNAME    foam-extend-5
+ENV FOAM_VNAME    foam-extend-5.0
 
 RUN mkdir -p ${HOME}/foam
 WORKDIR ${HOME}/foam
@@ -124,8 +112,20 @@ ENV PATH="${HOME}/CPL_APP_LAMMPS-DEV/bin:${PATH}"
 # ------------------------------------------------------------
 
 COPY 0002-Patch-pstreams.patch .
-WORKDIR ${HOME}/foam/foam-extend-5/src
-RUN bash -c "source etc/bashrc; ./Allwmake"
+WORKDIR ${HOME}/foam/${FOAM_VNAME}/src
+RUN bash -c "source ${HOME}/foam/${FOAM_VNAME}/etc/bashrc; ./Allwmake"
+
+# ------------------------------------------------------------
+# Configure MPI and set ownership on ~/data
+# ------------------------------------------------------------
+
+USER root
+
+RUN rm -fr ${HOME}/.openmpi && mkdir -p ${HOME}/.openmpi
+ADD default-mca-params.conf ${HOME}/.openmpi/mca-params.conf
+RUN chown -R ${USER}:${USER} ${HOME}/.openmpi
+RUN mkdir ${HOME}/data
+RUN chown -R ${USER}:${USER} ${HOME}/data
 
 # ------------------------------------------------------------
 # Final preparations

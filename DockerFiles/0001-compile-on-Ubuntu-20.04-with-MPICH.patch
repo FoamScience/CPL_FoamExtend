@@ -1,14 +1,15 @@
-From 83b90cbdd73159fb37079857beecdc7615f576e2 Mon Sep 17 00:00:00 2001
+From 0fdf601ab977c62bf4a518cb3af6a59decd9b529 Mon Sep 17 00:00:00 2001
 From: Elwardi <elwardi.fadeli@tu-darmstadt.de>
 Date: Thu, 24 Mar 2022 12:32:21 +0100
 Subject: [PATCH] compile on Ubuntu 20.04 with MPICH
 
 ---
- ThirdParty/tools/makeThirdPartyFunctionsForRPM | 8 ++++----
- etc/bashrc                                     | 6 +++++-
- wmake/rules/linux64Gcc/c                       | 2 +-
- wmake/rules/linux64Gcc/c++                     | 2 +-
- 4 files changed, 11 insertions(+), 7 deletions(-)
+ ThirdParty/tools/makeThirdPartyFunctionsForRPM |  8 ++++----
+ etc/bashrc                                     |  7 ++++++-
+ src/foam/db/IOstreams/Pstreams/Pstream.C       | 14 +++++++-------
+ wmake/rules/linux64Gcc/c                       |  2 +-
+ wmake/rules/linux64Gcc/c++                     |  2 +-
+ 5 files changed, 19 insertions(+), 14 deletions(-)
 
 diff --git a/ThirdParty/tools/makeThirdPartyFunctionsForRPM b/ThirdParty/tools/makeThirdPartyFunctionsForRPM
 index 8ce88cc1..3efcabbf 100755
@@ -41,7 +42,7 @@ index 8ce88cc1..3efcabbf 100755
  
  #
 diff --git a/etc/bashrc b/etc/bashrc
-index 1910c8c9..c6cb5baf 100755
+index 1910c8c9..7d35c1de 100755
 --- a/etc/bashrc
 +++ b/etc/bashrc
 @@ -192,7 +192,7 @@ export WM_COMPILER_LIB_ARCH=
@@ -65,6 +66,31 @@ index 1910c8c9..c6cb5baf 100755
  # Clean standard environment variables (PATH, LD_LIBRARY_PATH, MANPATH)
  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  cleanProg=$WM_PROJECT_DIR/bin/foamCleanPath
+diff --git a/src/foam/db/IOstreams/Pstreams/Pstream.C b/src/foam/db/IOstreams/Pstreams/Pstream.C
+index 17f20205..b80843cd 100644
+--- a/src/foam/db/IOstreams/Pstreams/Pstream.C
++++ b/src/foam/db/IOstreams/Pstreams/Pstream.C
+@@ -607,13 +607,13 @@ bool Foam::Pstream::init(int& argc, char**& argv, const bool needsThread)
+             << " myRank:" << myRank << endl;
+     }
+ 
+-    if (numprocs <= 1)
+-    {
+-        FatalErrorInFunction
+-            << "bool IPstream::init(int& argc, char**& argv) : "
+-               "attempt to run parallel on 1 processor"
+-            << Foam::abort(FatalError);
+-    }
++    //if (numprocs <= 1)
++    //{
++    //    FatalErrorInFunction
++    //        << "bool IPstream::init(int& argc, char**& argv) : "
++    //           "attempt to run parallel on 1 processor"
++    //        << Foam::abort(FatalError);
++    //}
+ 
+     // Initialise parallel structure
+     setParRun(numprocs, provided_thread_support == MPI_THREAD_MULTIPLE);
 diff --git a/wmake/rules/linux64Gcc/c b/wmake/rules/linux64Gcc/c
 index f4114be3..33e81aaa 100644
 --- a/wmake/rules/linux64Gcc/c
