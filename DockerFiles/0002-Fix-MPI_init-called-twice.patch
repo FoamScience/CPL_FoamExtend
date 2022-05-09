@@ -1,0 +1,126 @@
+From 421245a18837cad16c4aa8748ef101576f4d5706 Mon Sep 17 00:00:00 2001
+From: Your Name <you@example.com>
+Date: Mon, 9 May 2022 13:47:24 +0000
+Subject: [PATCH] Fix MPI_init called twice
+
+---
+ bin/mpirunDebug                               |  6 +-
+ src/foam/db/IOstreams/Pstreams/Pstream.C      | 56 +++++++++----------
+ .../db/IOstreams/Pstreams/PstreamGlobals.C    |  2 +-
+ 3 files changed, 32 insertions(+), 32 deletions(-)
+
+diff --git a/bin/mpirunDebug b/bin/mpirunDebug
+index 9a4c30ca8..ad58fe135 100755
+--- a/bin/mpirunDebug
++++ b/bin/mpirunDebug
+@@ -159,7 +159,7 @@ do
+     geom="-geometry 120x20+$xpos+$ypos"
+     node=""
+ 
+-    if [ .$WM_MPLIB = .OPENMPI ] | [ .$WM_MPLIB = .SYSTEMOPENMPI ]; then
++    if [ .$WM_MPLIB = .OPENMPI ]; then
+         node="-np 1 "
+     fi
+ 
+@@ -209,9 +209,9 @@ do
+ done
+ 
+ cmd=""
+-if [ .$WM_MPLIB = .OPENMPI ] | [ .$WM_MPLIB = .SYSTEMOPENMPI ]; then
++if [ .$WM_MPLIB = .OPENMPI ]; then
+     cmd="mpirun -app $PWD/mpirun.schema </dev/null"
+-elif [ .$WM_MPLIB = .MPICH ] |  .$WM_MPLIB = .SYSTEMMPICH ]; then
++elif [ .$WM_MPLIB = .MPICH ]; then
+     cmd="mpiexec"
+     for ((proc=0; proc<$nProcs; proc++))
+     do
+diff --git a/src/foam/db/IOstreams/Pstreams/Pstream.C b/src/foam/db/IOstreams/Pstreams/Pstream.C
+index b80843cdd..108297b54 100644
+--- a/src/foam/db/IOstreams/Pstreams/Pstream.C
++++ b/src/foam/db/IOstreams/Pstreams/Pstream.C
+@@ -319,12 +319,12 @@ void Foam::Pstream::allocatePstreamCommunicator
+         // Set the number of processes to the actual number
+         int numProcs;
+         MPI_Comm_size(PstreamGlobals::MPICommunicators_[index], &numProcs);
+-        //procIDs_[index] = identity(numProcs);
+-        procIDs_[index].setSize(numProcs);
+-        forAll(procIDs_[index], i)
+-        {
+-            procIDs_[index][i] = i;
+-        }
++        ////procIDs_[index] = identity(numProcs);
++        //procIDs_[index].setSize(numProcs);
++        //forAll(procIDs_[index], i)
++        //{
++        //    procIDs_[index][i] = i;
++        //}
+      }
+     else
+     {
+@@ -573,28 +573,28 @@ bool Foam::Pstream::init(int& argc, char**& argv, const bool needsThread)
+ {
+     int provided_thread_support;
+ 
+-    MPI_Init_thread
+-    (
+-        &argc,
+-        &argv,
+-        (
+-            needsThread
+-          ? MPI_THREAD_MULTIPLE
+-          : MPI_THREAD_SINGLE
+-        ),
+-        &provided_thread_support
+-    );
+-
+-    int myGlobalRank;
+-    MPI_Comm_rank(MPI_COMM_WORLD, &myGlobalRank);
+-
+-    MPI_Comm_split
+-    (
+-        MPI_COMM_WORLD,
+-        1,
+-        myGlobalRank,
+-        &PstreamGlobals::MPI_COMM_FOAM
+-    );
++    //MPI_Init_thread
++    //(
++    //    &argc,
++    //    &argv,
++    //    (
++    //        needsThread
++    //      ? MPI_THREAD_MULTIPLE
++    //      : MPI_THREAD_SINGLE
++    //    ),
++    //    &provided_thread_support
++    //);
++
++    //int myGlobalRank;
++    //MPI_Comm_rank(MPI_COMM_WORLD, &myGlobalRank);
++
++    //MPI_Comm_split
++    //(
++    //    MPI_COMM_WORLD,
++    //    1,
++    //    myGlobalRank,
++    //    &PstreamGlobals::MPI_COMM_FOAM
++    //);
+ 
+     int numprocs;
+     MPI_Comm_size(PstreamGlobals::MPI_COMM_FOAM, &numprocs);
+diff --git a/src/foam/db/IOstreams/Pstreams/PstreamGlobals.C b/src/foam/db/IOstreams/Pstreams/PstreamGlobals.C
+index c687a25e4..dd0add52e 100644
+--- a/src/foam/db/IOstreams/Pstreams/PstreamGlobals.C
++++ b/src/foam/db/IOstreams/Pstreams/PstreamGlobals.C
+@@ -32,7 +32,7 @@ namespace Foam
+ 
+ // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+ 
+-MPI_Comm PstreamGlobals::MPI_COMM_FOAM;
++MPI_Comm PstreamGlobals::MPI_COMM_FOAM = MPI_COMM_WORLD;
+ 
+ // Outstanding non-blocking operations.
+ //! \cond fileScope
+-- 
+2.25.1
+

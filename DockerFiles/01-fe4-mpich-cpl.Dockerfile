@@ -111,8 +111,9 @@ ENV PATH="${HOME}/CPL_APP_LAMMPS-DEV/bin:${PATH}"
 # Patch Pstreams in Foam Extend
 # ------------------------------------------------------------
 
-COPY 0002-Patch-pstreams.patch .
 WORKDIR ${HOME}/foam/${FOAM_VNAME}/src
+COPY 0002-Fix-MPI_init-called-twice.patch .
+RUN git am 0002-Fix-MPI_init-called-twice.patch
 RUN bash -c "source ${HOME}/foam/${FOAM_VNAME}/etc/bashrc; ./Allwmake"
 
 # ------------------------------------------------------------
