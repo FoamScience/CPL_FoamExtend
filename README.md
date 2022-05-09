@@ -26,9 +26,10 @@ How to use the Docker image
 1. Install Docker if you don't have it yet: `bash <(curl -s https://get.docker.com/)`
 2. Pull the image `docker pull foamscience/fe4-mpich-cpl-lammps`
 3. Create a temporary container to play around with the library `docker run --rm -it foamscience/fe4-mpich-cpl-lammps bash`
-4. You can then clone this repo there and compile `src/CPLSocketFoam` library.
+4. You can then clone this repo there and compile with `make` after sourcing `SOURCEME.sh` file
 
-In the container; `/cpl-library/examples/LAMMPS-OPENFOAM` has an example case with the patched `icoFoam`.
+`examples/LAMMPS-OPENFOAM` from this repo is an attempt to adapt `/cpl-library/examples/LAMMPS-OPENFOAM` (the original example)
+to work with the example solver (`icoFoam`).
 
 Installation of the Foam-Extend socket
 ======================================
@@ -42,13 +43,14 @@ I don't want to run things in Docker containers
 Unfortunately, we need to override some code in the `Pstreams` part of the `foam` library. If you do this
 on your regular installation, you'll probably break it.
 
-You can always dedicate a Foam-Extend installation to this task, but then you'll have to patches present in `DockerFiles`
+You can always dedicate a Foam-Extend installation to this task, but then you'll have to apply the patches present in `DockerFiles`
 directory.
 
-> If your Foam-Extend is compiled with MPICH, you can get away with pre-loading the patched `libfoam.so` shared
-> library to prevent the original one from loading with `LD_PRELOAD=/path/to/patched/lib.so <your-solver>`
+> If your Foam-Extend is not compiled with MPICH, you can get away with pre-loading the patched `libfoam.so` shared
+> library (you can get it from the Docker image) to prevent the original one from loading with 
+> `LD_PRELOAD=/path/to/patched/libfoam.so <your-solver>`
 >
-> But that is highly discouraged, please use the docker container instead!
+> However that is highly discouraged, please use the docker container instead!
 
 License
 =======
