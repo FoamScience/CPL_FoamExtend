@@ -2,7 +2,7 @@ OpenFOAM_DIR=`cat CODE_INST_DIR`
 OpenFOAM_SRC_DIR=$(OpenFOAM_SRC_DIR)/src
 OpenFOAM_ETC_DIR=$(OpenFOAM_ETC_DIR)/etc
 
-.PHONY: all test clean clean-test socket cplicofoam
+.PHONY: all test clean clean-test socket cplicofoam cpltestfoam
 all: cplicofoam
 
 #pstream  necessary
@@ -12,6 +12,9 @@ socket:
 
 cplicofoam: socket
 	@wmake src/solvers/CPLIcoFoam
+
+cpltestfoam: socket
+	@wmake src/solvers/CPLTestFoam
 
 clean:
 	@wclean src/solvers/CPLIcoFoam

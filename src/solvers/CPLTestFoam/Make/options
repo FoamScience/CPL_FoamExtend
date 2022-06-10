@@ -1,0 +1,20 @@
+include $(RULES)/mplib$(WM_MPLIB)
+
+
+EXE_INC = $(PFLAGS) $(PINC) \
+    -I$(LIB_SRC)/finiteVolume/lnInclude \
+    -I$(LIB_SRC)/meshTools/lnInclude \
+    -I$(CONDA_PREFIX)/include/cpl \
+    -I$(LIB_SRC)/lagrangian/basic/lnInclude \
+    -I$(FOAM_CPL_APP_SRC)/CPLSocketFOAM/lnInclude \
+    -I$(CPL_INCLUDE_PATH)
+
+
+EXE_LIBS = $(PLIBS) \
+    -Wl,-rpath=$(MPI_ARCH_PATH)/lib \
+    -L$(FOAM_CPL_APP_LIBBIN) -Wl,-rpath=$(FOAM_CPL_APP_LIBBIN) -L$(FOAM_USER_LIBBIN) \
+    -L$(CPL_LIBRARY_PATH) -Wl,-rpath=$(CPL_LIBRARY_PATH) \
+    -lfiniteVolume \
+    -llagrangian \
+    -llduSolvers \
+    -lCPLSocketFOAM

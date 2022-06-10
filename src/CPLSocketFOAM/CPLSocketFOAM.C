@@ -445,7 +445,7 @@ double CPLSocketFOAM::unpackVelocity(volVectorField &U, fvMesh &mesh)
 		int applyBCz = CPL::get<int> ("cpl_cfd_bc_z");
 
 		// Patch receiving B.Cs
-		Foam::string receivePatchName ("CPLReceiveMD");
+		Foam::word receivePatchName = "CPLReceiveMD";
 		Foam::label rvPatchID = mesh.boundaryMesh().findPatchID(receivePatchName);
 
 		if (rvPatchID == -1) {
@@ -552,6 +552,7 @@ double CPLSocketFOAM::unpackVelocity(volVectorField &U, fvMesh &mesh)
 
         }
     }
+    return 0;
 }
 
 
