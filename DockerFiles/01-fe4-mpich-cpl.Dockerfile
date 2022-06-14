@@ -96,9 +96,15 @@ RUN git clone -b stable https://github.com/lammps/lammps.git ${HOME}/lammps && \
 
 WORKDIR ${HOME}/lammps
 RUN git checkout ${LAMMPS_COMMIT}
+RUN wget https://www.vtk.org/files/release/8.2/VTK-8.2.0.tar.gz && \
+    tar -xvf VTK-8.2.0.tar.gz && mkdir -p VTK-8.2.0/build
+COPY vtk-config VTK-8.2.0/build/CMakeCache.txt
+RUN cd VTK-8.2.0/build && cmake .. && make && sudo make install
+COPY Makefile.vtk lib/vtk/Makefile.lammps
 WORKDIR ${HOME}/CPL_APP_LAMMPS-DEV
 RUN echo "${HOME}/lammps" > ${HOME}/CPL_APP_LAMMPS-DEV/CODE_INST_DIR && \
     echo granular >> config/lammps_packages.in && \
+    echo user-vtk >> config/lammps_packages.in && \
     cd config && \
     sh ./enable-packages.sh make && \
     cd ../ && \
