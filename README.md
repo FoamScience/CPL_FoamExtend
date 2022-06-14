@@ -15,7 +15,7 @@ Important notes about the Docker image
 
 - The image is MPI-ready and you can use it on a Docker Swarm (or `docker-machine`) to spawn a cluster of containers.
 - The default user is named `openfoam` with UID 1001 (Take a look at the `DockerFiles/01-fe4-mpich-cpl.Dockerfile` for more info)
-- `/cpl-library` is where the source code of the CPL library
+- `/cpl-library` is where the source code of the CPL library lives
 - `~/foam/foam-extend-5.0/` holds the patched Foam-Extend installation
 - `~/lammps` holds the patched LAMMPS installation
 
@@ -34,13 +34,10 @@ to work with the example solver (`icoFoam`).
 The docker image is designed to develop the FoamExtend-LAMMPS socket, typically you'd want to:
 ```
 docker run --rm --net host -e "DISPLAY" \
-    -v /tmp/.X11-unix:/tmp/.X11-unix -v /repos/cpl_foamextend:/home/openfoam/data/cpl_foamextend \
+    -v /tmp/.X11-unix:/tmp/.X11-unix \
     -it foamscience/fe4-mpich-cpl-lammps:latest bash
 ```
 (You'll also need to add `xauth` tokens to the container if you want to run GUI apps from it).
-
-> By exposing the local `CPL_FoamExtend` repo to the container, you can edit code and commit on your local environment
-> but compile inside the container.
 
 > All changes to any other components (CPL library itself, FE4 source code or LAMMPS's code) should be applied with Git patches;
 > It eases Docker image builds
