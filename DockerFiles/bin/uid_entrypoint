@@ -1,0 +1,8 @@
+#!/bin/sh
+if ! whoami &> /dev/null; then
+  if [ -w /etc/passwd ]; then
+      sleep 1
+      echo "${USER:-openfoam}:x:$(id -u):0:${USER:-openfoam} user:/home/openfoam:/sbin/nologin" >> /etc/passwd
+  fi
+fi
+exec "$@"

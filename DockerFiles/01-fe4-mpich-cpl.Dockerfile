@@ -91,6 +91,7 @@ RUN echo 'source ~/foam/${FOAM_VNAME}/etc/bashrc' >> ${HOME}/.bashrc
 # ------------------------------------------------------------
 
 ENV LAMMPS_COMMIT "6354777d098deafc18a600877d00dbfcd8ce15c3"
+ENV CPL_APP_COMMIT "fb196bf1ea24477220b42273dd055938774aa6ed"
 RUN git clone -b stable https://github.com/lammps/lammps.git ${HOME}/lammps && \
     git clone https://github.com/Crompulence/CPL_APP_LAMMPS-DEV.git ${HOME}/CPL_APP_LAMMPS-DEV
 
@@ -102,6 +103,7 @@ COPY vtk-config VTK-8.2.0/build/CMakeCache.txt
 RUN cd VTK-8.2.0/build && cmake .. && make && sudo make install
 COPY Makefile.vtk lib/vtk/Makefile.lammps
 WORKDIR ${HOME}/CPL_APP_LAMMPS-DEV
+RUN git checkout ${CPL_APP_COMMIT}
 RUN echo "${HOME}/lammps" > ${HOME}/CPL_APP_LAMMPS-DEV/CODE_INST_DIR && \
     echo granular >> config/lammps_packages.in && \
     echo user-vtk >> config/lammps_packages.in && \
@@ -138,13 +140,28 @@ RUN chown -R ${USER}:${USER} ${HOME}/data
 # Final preparations
 # ------------------------------------------------------------
 
-WORKDIR ${HOME}/data
-
-USER root
 EXPOSE 22
 RUN /usr/bin/ssh-keygen -A 
+
+RUN apt-get update && \
+    apt-get install -y sudo passwd libnss-wrapper && \
+    apt-get clean && apt-get purge && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+ENV APP_ROOT=/home/openfoam
+ENV PATH=${APP_ROOT}/bin:${PATH}
+COPY bin/ ${APP_ROOT}/bin/
+RUN chmod -R g=u /etc/passwd
+
+VOLUME ${HOME}/data
+RUN chown openfoam:root ${HOME}/data
+
 USER ${USER}
+WORKDIR ${HOME}/data
 
 LABEL maintainer="Mohammed Elwardi Fadeli <fadeli.elwardi@tu-darmstadt.de>"
+LABEL source="https://github.com/FoamScience/CPL_FoamExtend/blob/master/DockerFiles/01-fe4-mpich-cpl.Dockerfile"
+
 # Make sure SSH has the keys
-CMD bash -c 'sudo /usr/sbin/sshd -d'
+#CMD bash -c '/usr/local/bin/init.sh'
+ENTRYPOINT [ "uid_entrypoint" ]
+CMD run
