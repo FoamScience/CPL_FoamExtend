@@ -23,8 +23,11 @@ Important notes about the Docker image
 How to use the Docker image
 ===========================
 
+> WHATEVER you do on the container, do NOT install `openmpi` libs! For example, installing ParaView from apt repos will installing those.
+
 1. Install Docker if you don't have it yet: `bash <(curl -s https://get.docker.com/)`
 2. Create a temporary container to play around with the library.
+   - Create a temporary folder (you need to create this folder with the user running docker), for example: `rm -rf /tmp/data && mkdir /tmp/data`
    - Basically: `docker run --rm -v /tmp/data:/home/openfoam/data -u $(id -u) -it foamscience/fe4-mpich-cpl-lammps:latest bash`
 4. You can then clone this repo there and compile with `make` after sourcing the `SOURCEME.sh` file
 
@@ -34,9 +37,9 @@ to work with the example solver (`icoFoam`).
 The docker image is designed to develop the FoamExtend-LAMMPS socket, typically you'd want to create a permanent `cpl`
 container, which has access to your hosts's display:
 ```
-docker run --name cpl --net host -e "DISPLAY" \
+docker run -u $(id -u) --name cpl --net host -e "DISPLAY" \
     -v /tmp/.X11-unix:/tmp/.X11-unix -v /tmp/data:/home/openfoam/data \
-    -it foamscience/fe4-mpich-cpl-lammps:latest
+    -it foamscience/fe4-mpich-cpl-lammps:latest bash
 ```
 
 On your host, run `xauth list`, you'll something like this:
@@ -46,9 +49,9 @@ MACHINE_NAME/unix:  ...  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 Get into the container, and run this command to give permission to the container so we can attach to the display from there:
 ```bash
-docker exec -it cpl bash
 # :1 here is the display; can be different for you, run this on the host: echo $DISPLAY 
 # Replace MACHINE_NAME and the hash with values from the host
+touch /home/openfoam/.Xauthority
 xauth add :1  MACHINE_NAME/unix  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 

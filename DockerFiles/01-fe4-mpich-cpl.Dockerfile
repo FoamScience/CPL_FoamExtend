@@ -150,7 +150,9 @@ RUN apt-get update && \
 ENV APP_ROOT=/home/openfoam
 ENV PATH=${APP_ROOT}/bin:${PATH}
 COPY bin/ ${APP_ROOT}/bin/
-RUN chmod -R g=u /etc/passwd
+RUN chmod -R u+x ${APP_ROOT}/bin && \
+    chgrp -R 0 ${APP_ROOT} && \
+    chmod -R g=u ${APP_ROOT} /etc/passwd
 
 VOLUME ${HOME}/data
 RUN chown openfoam:root ${HOME}/data
