@@ -1,0 +1,230 @@
+LAMMPS (3 Mar 2020)
+# sample LAMMPS input script for viscosity of 3d LJ liquid
+# use tethered shearing wall, thermostat via fix langevin
+
+#This is needed for bulk runs to allow job sizing
+processors 1 1 1
+
+# Impose lj style fluid with Heat
+
+dimension					3
+boundary					p f p
+units						lj
+atom_modify 				map array
+
+variable					skin equal 0.1
+
+variable					minx equal -23.45
+variable					maxx equal 23.45
+variable					miny equal 0
+variable					maxy equal 31.3
+variable					minz equal 0
+variable					maxz equal 4.81
+
+variable					lattice equal 0.81
+variable					atomMass equal 1
+
+variable					epsilon equal 1
+variable					sigma equal 1
+variable					epsilonWF equal 0.6
+variable					sigmaWF equal 1
+variable					rCutOff equal 2.2*${sigma}
+variable					rCutOff equal 2.2*1
+
+variable					T equal 1.1
+
+variable					dt equal 0.005*0.1
+
+variable					thickness equal 2
+
+#atom_style					atomic
+#neighbor					${skin} bin
+#neigh_modify				delay 5
+
+# create geometry
+
+lattice						fcc ${lattice}
+lattice						fcc 0.81
+Lattice spacing in x,y,z = 1.70291 1.70291 1.70291
+region						box block ${minx} ${maxx} ${miny} ${maxy} ${minz} ${maxz} units box
+region						box block -23.45 ${maxx} ${miny} ${maxy} ${minz} ${maxz} units box
+region						box block -23.45 23.45 ${miny} ${maxy} ${minz} ${maxz} units box
+region						box block -23.45 23.45 0 ${maxy} ${minz} ${maxz} units box
+region						box block -23.45 23.45 0 31.3 ${minz} ${maxz} units box
+region						box block -23.45 23.45 0 31.3 0 ${maxz} units box
+region						box block -23.45 23.45 0 31.3 0 4.81 units box
+create_box					2 box
+Created orthogonal box = (-23.45 0 0) to (23.45 31.3 4.81)
+  1 by 1 by 1 MPI processor grid
+create_atoms				1 box
+Created 6105 atoms
+  create_atoms CPU = 0.00140476 secs
+
+mass						1 ${atomMass}
+mass						1 1
+mass						2 ${atomMass}
+mass						2 1
+
+variable					minBx equal ${minx}
+variable					minBx equal -23.45
+variable					maxBx equal ${maxx}
+variable					maxBx equal 23.45
+variable					minBy equal ${miny}
+variable					minBy equal 0
+variable					maxBy equal ${miny}+${thickness}
+variable					maxBy equal 0+${thickness}
+variable					maxBy equal 0+2
+variable					minBz equal ${minz}
+variable					minBz equal 0
+variable					maxBz equal ${maxz}
+variable					maxBz equal 4.81
+region						bottom block ${minBx} ${maxBx} ${minBy} ${maxBy} ${minBz} ${maxBz} units box
+region						bottom block -23.45 ${maxBx} ${minBy} ${maxBy} ${minBz} ${maxBz} units box
+region						bottom block -23.45 23.45 ${minBy} ${maxBy} ${minBz} ${maxBz} units box
+region						bottom block -23.45 23.45 0 ${maxBy} ${minBz} ${maxBz} units box
+region						bottom block -23.45 23.45 0 2 ${minBz} ${maxBz} units box
+region						bottom block -23.45 23.45 0 2 0 ${maxBz} units box
+region						bottom block -23.45 23.45 0 2 0 4.81 units box
+set							region bottom type 2
+  495 settings made for type
+group						boundary region bottom
+495 atoms in group boundary
+group						moving subtract all boundary
+5610 atoms in group moving
+
+# LJ potentials
+
+#pair_style					hybrid lj/cut ${rCutOff} lj/cut ${rCutOff} #eam/alloy
+pair_style					lj/cut ${rCutOff}
+pair_style					lj/cut 2.2
+pair_coeff					* * ${epsilon} ${sigma} ${rCutOff}
+pair_coeff					* * 1 ${sigma} ${rCutOff}
+pair_coeff					* * 1 1 ${rCutOff}
+pair_coeff					* * 1 1 2.2
+pair_modify					shift yes
+
+velocity					moving create ${T} 482748 mom yes
+velocity					moving create 1.1 482748 mom yes
+velocity					boundary create 0 482748 mom yes
+fix							1 all nve
+fix 						2 all langevin ${T} ${T} 1 48279
+fix 						2 all langevin 1.1 ${T} 1 48279
+fix 						2 all langevin 1.1 1.1 1 48279
+#fix							cfd all couple/cfd couple_every 50 mpi
+#fix							cfd2 all couple/cfd/force/md 1 50 50
+fix 						freeze boundary setforce 0.0 0.0 0.0 #region bottom
+fix							topWall all wall/lj126 yhi ${maxy} ${epsilon} ${sigma} ${rCutOff} units box
+fix							topWall all wall/lj126 yhi 31.3 ${epsilon} ${sigma} ${rCutOff} units box
+fix							topWall all wall/lj126 yhi 31.3 1 ${sigma} ${rCutOff} units box
+fix							topWall all wall/lj126 yhi 31.3 1 1 ${rCutOff} units box
+fix							topWall all wall/lj126 yhi 31.3 1 1 2.2 units box
+#fix							topWall all wall/lj126 yhi ${maxy} ${epsilon} ${sigma} ${rCutOff} units box
+#compute 					1 all pair/local dist eng fx fy fz
+#fix							fxyz all ave/atom 1 1 50 fx fy fz f_fpotential[1] f_fpotential[2] f_fpotential[3]
+
+# run with indenter
+
+timestep					${dt}
+timestep					0.0005
+
+
+thermo						100
+#dump                        vtk all custom/vtk 5000 openfoam/dump*.vtk id type x y z vx vy vz fx fy fz
+#dump						dmp all custom 101 ../DEM/post/dump.lammpstrj id type x y z vx vy vz #v_test
+#dump						dmp all custom 50 ../DEM/post/dump.*.liggghts_init id type fx f_fxyz[1] f_fxyz[4] f_fpotential[1] f_avetimepotentialforce[1] f_avetimetotalforce[1]
+#dump						dmp all custom 100 ../DEM/post/dump.*.liggghts_init vx f_avetimevelocity[1] vy f_avetimevelocity[2] vz f_avetimevelocity[3] fx f_avetimepotentialforce[1] fy f_avetimepotentialforce[2] fz f_avetimepotentialforce[3]
+#dump						dmp all custom 100 ../DEM/post/dump.*.liggghts_init f_atomMass
+run							5000
+Neighbor list info ...
+  update every 1 steps, delay 10 steps, check yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 2.5
+  ghost atom cutoff = 2.5
+  binsize = 1.25, bins = 38 26 4
+  1 neighbor lists, perpetual/occasional/extra = 1 0 0
+  (1) pair lj/cut, perpetual
+      attributes: half, newton on
+      pair build: half/bin/atomonly/newton
+      stencil: half/bin/3d/newton
+      bin: standard
+Per MPI rank memory allocation (min/avg/max) = 4.126 | 4.126 | 4.126 Mbytes
+Step Temp E_pair E_mol TotEng Press 
+       0    1.0107962   -5.1990395            0   -3.6830935   -1.3068934 
+     100    10.472001   -2.4023692            0     13.30306     19.45685 
+     200    8.4395667   -1.0678198            0    11.589457    23.692999 
+     300     8.256138   -1.4426459            0    10.939533    22.590678 
+     400    7.6479602   -1.6110492            0    9.8590119    21.748779 
+     500     7.007095   -1.6084821            0    8.9004388    21.403734 
+     600     6.469557    -1.692947            0    8.0097989    20.766964 
+     700     6.090156   -1.9217751            0    7.2119625    19.706778 
+     800     5.679213   -2.0512244            0    6.4661996    18.916378 
+     900    5.3744614   -2.2380818            0    5.8222898    17.961708 
+    1000    5.0197258   -2.3441669            0    5.1841885    17.321392 
+    1100    4.7259769   -2.4559686            0    4.6318355    16.634152 
+    1200    4.4229932   -2.5247086            0    4.1086946    16.149297 
+    1300    4.1648257   -2.6166095            0    3.6296058    15.585718 
+    1400    3.9504627   -2.7366755            0     3.188048    14.966656 
+    1500    3.7315755   -2.8127016            0    2.7837448    14.515308 
+    1600    3.5458568   -2.9367603            0    2.3811538    13.879882 
+    1700    3.3696073   -3.0196256            0    2.0339575    13.382709 
+    1800    3.2018686   -3.1006695            0    1.7013467    12.895978 
+    1900    3.0747481   -3.2169197            0    1.3944469    12.305582 
+    2000    2.8922804   -3.2290314            0    1.1086786    12.096772 
+    2100    2.7894401   -3.3399639            0   0.84351087    11.574074 
+    2200    2.6345012   -3.3687197            0   0.58238487     11.33092 
+    2300    2.4979269   -3.4161713            0   0.33010526     11.01947 
+    2400    2.4118253   -3.5261557            0  0.090989748     10.43431 
+    2500    2.3205556   -3.5793101            0 -0.099046822    10.088352 
+    2600     2.245811   -3.6533532            0  -0.28518853     9.683935 
+    2700    2.1397825   -3.6902958            0   -0.4811478    9.4213499 
+    2800    2.0851139   -3.7508819            0  -0.62372336    9.1006249 
+    2900    1.9894906    -3.746673            0  -0.76292595    9.0174092 
+    3000    1.9506656   -3.8350157            0  -0.90949648    8.5755751 
+    3100    1.8909766   -3.8868286            0   -1.0508283    8.3040621 
+    3200    1.8134573   -3.9030793            0   -1.1833389    8.1432073 
+    3300    1.7746404   -3.9603238            0   -1.2987993    7.8400941 
+    3400    1.7090167   -3.9555322            0    -1.392427    7.7659679 
+    3500    1.6905781   -4.0352175            0   -1.4997658     7.389892 
+    3600    1.6219984    -4.012953            0    -1.580354    7.4373799 
+    3700    1.5752309   -4.0209991            0   -1.6585398    7.3562464 
+    3800    1.5175489   -4.0165109            0   -1.7405604    7.3258772 
+    3900    1.4822162   -4.0321661            0   -1.8092061    7.2509609 
+    4000    1.4346613   -4.0445469            0   -1.8929074     7.160228 
+    4100    1.4166643   -4.0708841            0   -1.9462357    7.0298981 
+    4200    1.3880097   -4.0886971            0   -2.0070236    6.9296241 
+    4300    1.3575468   -4.1040905            0   -2.0681038    6.8349536 
+    4400    1.3622965   -4.1564489            0   -2.1133389     6.609479 
+    4500    1.3199796   -4.1460881            0   -2.1664431    6.6042244 
+    4600     1.303849    -4.169664            0    -2.214211    6.4903278 
+    4700    1.2826905   -4.1784433            0   -2.2547226    6.4347552 
+    4800    1.2717628   -4.1983287            0   -2.2909969     6.316391 
+    4900    1.2724808   -4.2366404            0   -2.3282319    6.1298139 
+    5000    1.2468093   -4.2296614            0   -2.3597537    6.1351995 
+Loop time of 14.6002 on 1 procs for 5000 steps with 6105 atoms
+
+Performance: 14794.333 tau/day, 342.461 timesteps/s
+100.0% CPU use with 1 MPI tasks x no OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 11.025     | 11.025     | 11.025     |   0.0 | 75.51
+Neigh   | 1.2741     | 1.2741     | 1.2741     |   0.0 |  8.73
+Comm    | 0.28043    | 0.28043    | 0.28043    |   0.0 |  1.92
+Output  | 0.0024493  | 0.0024493  | 0.0024493  |   0.0 |  0.02
+Modify  | 1.946      | 1.946      | 1.946      |   0.0 | 13.33
+Other   |            | 0.07257    |            |       |  0.50
+
+Nlocal:    6105 ave 6105 max 6105 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:    7683 ave 7683 max 7683 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:    171097 ave 171097 max 171097 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 171097
+Ave neighs/atom = 28.0257
+Neighbor list builds = 172
+Dangerous builds = 16
+
+Total wall time: 0:00:14
